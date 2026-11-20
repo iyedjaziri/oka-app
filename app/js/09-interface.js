@@ -115,6 +115,7 @@ function applyTheme(){
   const sb = document.getElementById("seasonBtn");
   sb.textContent = SEASON_EMOJI[season]; sb.title = "Couleurs : " + SEASON_NAME[season] + " (toucher pour changer)"; sb.setAttribute("aria-label", sb.title);
   document.getElementById("seasonName").textContent = SEASON_NAME[season];
+  document.getElementById("seasonFloat").textContent = SEASON_EMOJI[season];
   currentSeason = season;
   document.getElementById("darkIc").innerHTML = ic(dark ? "sun" : "moon");
   document.getElementById("darkTxt").textContent = dark ? "Mode clair" : "Mode sombre";
@@ -154,15 +155,36 @@ function alignSide(largeur){
 if (window.ResizeObserver) new ResizeObserver(() => alignSide(false)).observe(document.getElementById("stage"));
 window.addEventListener("resize", layoutSimple);
 /* ---- menu des réglages rapides (roue en haut à droite) ---- */
-const QM = document.getElementById("quickMenu"), QB = document.getElementById("btnMenu");
+const QM = document.getElementById("quickMenu"), QB = document.getElementById("btnMenu"), SF = document.getElementById("seasonFloat");
+const calme = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const menuOuvert = () => !QM.classList.contains("hidden") && !QM.classList.contains("closing");
+[...QM.children].forEach((el, i) => el.style.setProperty("--i", i)); // ordre d'apparition, un à un
 function quickMenu(open){
-  QM.classList.toggle("hidden", !open); QB.classList.toggle("on", open); QB.setAttribute("aria-expanded", open ? "true" : "false");
-  if (open) majQuickMenu();
+  if (open === menuOuvert()) return;
+  QB.classList.toggle("on", open); QB.setAttribute("aria-expanded", open ? "true" : "false");
+  SF.classList.toggle("away", open); // l'icône de saison est dans le menu tant qu'il est ouvert
+  if (open){ QM.classList.remove("closing", "hidden"); majQuickMenu(); return; }
+  if (calme()){ QM.classList.add("hidden"); return; }
+  QM.classList.add("closing");
+  setTimeout(() => { if (QM.classList.contains("closing")){ QM.classList.remove("closing"); QM.classList.add("hidden"); } }, 180);
 }
+// l'icône de saison glisse jusqu'à sa place dans le menu
+SF.onclick = e => {
+  e.stopPropagation(); wake();
+  const a = SF.getBoundingClientRect(), t = document.getElementById("seasonBtn");
+  quickMenu(true);
+  if (calme() || !SF.animate) return;
+  // position finale (sans les animations d'apparition en cours)
+  const bx = QM.offsetLeft + QM.clientLeft + t.offsetLeft + t.offsetWidth/2, by = QM.offsetTop + QM.clientTop + t.offsetTop + t.offsetHeight/2;
+  t.style.visibility = "hidden"; SF.classList.add("flying");
+  const fin = () => { t.style.visibility = ""; SF.classList.remove("flying"); SF.getAnimations().forEach(x => x.cancel()); };
+  SF.animate([{transform:"none"}, {transform:`translate(${bx - a.left - a.width/2}px, ${by - a.top - a.height/2}px) scale(${t.offsetWidth / a.width})`}],
+    {duration:650, easing:"cubic-bezier(.45,0,.2,1)", fill:"forwards"}).onfinish = fin;
+};
 function majQuickMenu(){ QM.querySelectorAll("[data-fs]").forEach(b => { const on = b.dataset.fs === settings.fs; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }); }
-QB.onclick = e => { e.stopPropagation(); quickMenu(QM.classList.contains("hidden")); };
-document.addEventListener("click", e => { if (!QM.classList.contains("hidden") && !QM.contains(e.target)) quickMenu(false); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !QM.classList.contains("hidden")){ quickMenu(false); QB.focus(); } });
+QB.onclick = e => { e.stopPropagation(); quickMenu(!menuOuvert()); };
+document.addEventListener("click", e => { if (menuOuvert() && !QM.contains(e.target)) quickMenu(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && menuOuvert()){ quickMenu(false); QB.focus(); } });
 // la taille change, le menu et la roue restent en place
 QM.querySelectorAll("[data-fs]").forEach(b => b.onclick = () => { settings.fs = b.dataset.fs; store.set("settings", settings); applyDisplay(); majQuickMenu(); });
 ["btnProfile", "btnHist", "btnSettings"].forEach(id => document.getElementById(id).addEventListener("click", () => quickMenu(false)));

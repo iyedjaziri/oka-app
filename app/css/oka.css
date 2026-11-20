@@ -413,8 +413,8 @@ header .logo{font-size:28px}
 .gearbtn.on .ic{transform:rotate(60deg)}
 
 /* menu déroulant : flotte sous la roue, au-dessus de la page */
-.quickmenu{position:fixed;top:calc(var(--hdrH) - 6px);right:16px;z-index:49;width:min(310px,calc(100vw - 20px));max-height:calc(100dvh - var(--hdrH) - 10px);overflow:auto;
-  background:var(--paper);border:2px solid var(--line);border-top:5px solid var(--c-acc);border-radius:var(--r);box-shadow:0 10px 30px rgba(60,35,20,.25);padding:8px;font-size:18px;line-height:1.3}
+.quickmenu{position:fixed;top:calc(var(--hdrH) + 10px);right:24px;z-index:49;width:min(310px,calc(100vw - 24px));max-height:calc(100dvh - var(--hdrH) - 24px);overflow:auto;
+  background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 44px rgba(60,35,20,.22),0 2px 6px rgba(60,35,20,.10);padding:10px;font-size:18px;line-height:1.3;transform-origin:top right}
 .qm-sec{padding:8px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .qm-t{display:flex;align-items:center;gap:10px;font-weight:800}
 .qm-t .ic,.qm-item .ic{width:24px;height:24px;color:var(--c-nav)}
@@ -431,7 +431,32 @@ header .logo{font-size:28px}
 .qm-sbtn{width:56px;height:56px;flex:0 0 56px;border-radius:50%;border:3px solid var(--c-acc);background:var(--paper);font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;transition:transform .15s}
 .qm-sbtn:hover{transform:scale(1.08)}
 .qm-sbtn:active{transform:scale(.94)}
-@media (max-width:760px){ header{min-height:60px} .gearbtn{width:46px;height:46px;flex-basis:46px} .quickmenu{right:10px} }
+@media (max-width:760px){ header{min-height:60px} .gearbtn{width:46px;height:46px;flex-basis:46px} .quickmenu{right:12px} }
+
+/* apparition fluide et posée : le panneau, puis chaque élément un à un */
+.quickmenu{animation:qmPanel .24s ease-out both}
+.quickmenu > *{animation:qmItem .34s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(70ms + var(--i,0) * 80ms)}
+.quickmenu.closing{animation:qmOut .18s ease-in both}
+.quickmenu.closing > *{animation:none}
+@keyframes qmPanel{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes qmItem{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes qmOut{to{opacity:0;transform:translateY(-6px) scale(.98)}}
+
+/* icône de saison flottante, en bas à droite ; elle rejoint le menu quand on la touche */
+.seasonfloat{position:fixed;right:16px;bottom:calc(var(--ctrlH) + var(--navH,0px) + 14px);z-index:47;width:60px;height:60px;border-radius:50%;border:3px solid var(--c-acc);background:var(--paper);font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(60,35,20,.22);transition:opacity .35s ease,transform .15s}
+.seasonfloat:hover{transform:scale(1.08)}
+.seasonfloat.away{opacity:0;pointer-events:none}
+.seasonfloat.flying{opacity:1;transition:none;z-index:60}
+@media (max-width:760px){ .seasonfloat{width:46px;height:46px;font-size:24px;right:10px} body.win-open .seasonfloat{display:none} }
+@media (prefers-reduced-motion:reduce){ .quickmenu,.quickmenu > *{animation:none!important} .seasonfloat{transition:none} }
+
+/* fond principal : une très légère teinte de la saison */
+body[data-season="printemps"]{--teinte:#7DB04B}
+body[data-season="ete"]{--teinte:#F2B33D}
+body[data-season="automne"]{--teinte:#D9772B}
+body[data-season="hiver"]{--teinte:#6F8FB8}
+body{background:color-mix(in srgb, var(--teinte, var(--beige)) 7%, var(--beige))}
+body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--beige))}
 
 /* ===== barre latérale alignée sur la scène de l'avatar (ordinateur, tablette) ===== */
 @media (min-width:761px){

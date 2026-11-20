@@ -111,7 +111,19 @@ function remind(e, txt){ toast(txt, 9000); if (!av.listening) say(txt, "rappel",
 
 /* ================= MÉTÉO PRÉVENTIVE (open-meteo) ================= */
 const WMO = c => c===0?["sun","ensoleillé"]: c<=2?["cloudsun","peu nuageux"]: c===3?["cloud","couvert"]: c<=48?["fog","brouillard"]: c<=57?["rain","bruine"]: c<=67?["rain","pluie"]: c<=77?["snow","neige"]: c<=82?["rain","averses"]: c<=86?["snow","averses de neige"]: ["storm","orages"];
-const wxIc = c => { const k = WMO(c)[0]; return ic(k, k==="sun"||k==="cloudsun" ? "sun" : "cloud"); };
+// pictogrammes météo en couleur : soleil doré, nuage bleu-gris, pluie bleue
+const WX_NUAGE = (d, fond, trait) => `<path d="${d}" fill="${fond || "#E3EBF3"}" stroke="${trait || "#7D93AB"}"/>`;
+const NUAGE = "M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 18z", NUAGE_HAUT = "M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 15z";
+const WX_SVG = {
+  sun: '<circle cx="12" cy="12" r="4.2" fill="#F6B73C" stroke="#E08A1E"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="#E08A1E"/>',
+  cloudsun: '<circle cx="8" cy="8" r="3" fill="#F6B73C" stroke="#E08A1E"/><path d="M8 2v1.5M2 8h1.5M3.8 3.8l1 1M12.2 3.8l-1 1" stroke="#E08A1E"/>' + WX_NUAGE("M9 20h8a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.5 1.5A2.8 2.8 0 0 0 9 20z"),
+  cloud: WX_NUAGE(NUAGE),
+  fog: '<path d="M4 8h16M2 12h18M5 16h14M8 20h8" stroke="#8FA0B3"/>',
+  rain: WX_NUAGE(NUAGE_HAUT) + '<path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" stroke="#2F7FC1"/>',
+  snow: WX_NUAGE(NUAGE_HAUT) + '<path d="M8 19v.01M12 21v.01M16 19v.01" stroke="#6FA8DC" stroke-width="3"/>',
+  storm: WX_NUAGE(NUAGE_HAUT, "#C9D3DE", "#647892") + '<path d="M13 15l-3 4h4l-3 4" stroke="#E9A21C"/>'
+};
+const wxIc = c => `<svg class="ic wxc" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${WX_SVG[WMO(c)[0]] || WX_SVG.cloud}</svg>`;
 async function geocode(){
   const p = profile || {};
   const key = (p.ville||"") + "|" + (p.pays||"");
