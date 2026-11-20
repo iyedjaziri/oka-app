@@ -32,6 +32,8 @@
   <button class="qm-item" id="btnProfile" data-ic="user">Profil</button>
   <button class="qm-item" id="btnHist" data-ic="history">Historique de la conversation</button>
   <button class="qm-item" id="btnSettings" data-ic="settings">Réglages avancés</button>
+  <div class="qm-music"><div class="qm-t"><span data-ic="music"></span>Musique calme</div>
+    <div class="qm-mrow"><span id="musicTitre"></span><button class="qm-mbtn" id="musicPlay" type="button"></button><button class="qm-mbtn" id="musicNext" type="button" aria-label="Morceau suivant">Suivante ›</button></div></div>
   <div class="qm-season"><span>Couleurs de saison<br><b id="seasonName"></b></span><button class="qm-sbtn" id="seasonBtn" type="button"></button></div>
 </div>
 
@@ -198,6 +200,10 @@
       <div><label>Mode sombre</label><select class="f" id="st_dark"><option value="0">Non (clair)</option><option value="1">Oui (sombre)</option></select></div>
       <div><label>Taille des caractères</label><select class="f" id="st_fs"><option value="petit">Petits caractères</option><option value="moyen">Caractères moyens</option><option value="grand">Grands caractères</option></select></div>
     </div>
+    <h3>Mon quartier</h3>
+    <label for="st_adresse">Adresse (facultatif)</label>
+    <input class="f" id="st_adresse" placeholder="ex. 12 rue de France, Nice" autocomplete="street-address">
+    <p class="muted small" id="st_adresseInfo" style="margin:4px 0 0"></p>
     <h3>Démonstration</h3>
     <div class="grid2">
       <div><label>Scénario météo</label><select class="f" id="st_wx"><option value="reel">Météo réelle (open-meteo)</option><option value="canicule">Forcer : canicule</option><option value="froid">Forcer : nuit froide</option><option value="medit">Forcer : épisode méditerranéen</option></select></div>
@@ -245,6 +251,7 @@
 </div>
 
 <canvas id="seasonFx" aria-hidden="true"></canvas>
+<button class="musicfloat" id="musicFloat" type="button" aria-pressed="false" data-ic="music"></button>
 <button class="seasonfloat" id="seasonFloat" type="button" aria-label="Couleurs de saison : ouvrir le menu des réglages" aria-controls="quickMenu"></button>
 <div class="toast hidden" id="toast"></div>
 
@@ -261,6 +268,8 @@
 <script src="js/10-profil-reglages.js"></script>
 <script src="js/11-jeux.js"></script>
 <script src="js/12-compte.js"></script>
-<script src="js/13-demarrage.js"></script>
+<script src="js/13-sorties-ville.js"></script>
+<script src="js/14-ambiance.js"></script>
+<script src="js/15-demarrage.js"></script>
 </body>
 </html>

@@ -25,6 +25,7 @@ function demarrer(){
   if (!profile){ openProfile(); fillProfile(DEMO_PROFILE()); }
   else { loadWeather(); setTimeout(() => checkReminders(), 3000); }
   chargerAnnonces(); setInterval(chargerAnnonces, 30*60000);
+  chargerEvenements(false); setInterval(() => chargerEvenements(false), 6*3600e3);
 }
 // tablette distribuée : activation par code avant le profil
 if (activationRequise()) ouvrirActivation(demarrer); else demarrer();

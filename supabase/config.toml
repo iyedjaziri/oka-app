@@ -432,3 +432,6 @@ verify_jwt = false
 
 [functions.ia]
 verify_jwt = false
+
+[functions.evenements]
+verify_jwt = false

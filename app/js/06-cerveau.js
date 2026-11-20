@@ -20,6 +20,7 @@ async function handleUser(text){
     if (has(n, "les deux", "garde", "quand meme")) return resolveConflict("both");
     if (has(n, "non", "annul", "laisse tomber")) return resolveConflict("cancel");
   }
+  if (pending && PENDING_SORTIE.has(pending.type) && repondreSortie(text, n)) return;
   if (modeLibre()){
     try{ return await claudeReply(text); }
     catch(e){ console.warn(e); toast("Pas de réponse en ligne (" + e.message + "). Je passe en mode démo."); }
@@ -122,7 +123,8 @@ function askQuiz(){ const item = QUIZ[quizI++ % QUIZ.length]; say(item.q, "socia
 function systemPrompt(){
   const p = profile || {};
   const ag = agenda.filter(e => e.date >= iso(new Date()) && e.date <= iso(addDays(new Date(),7))).sort(byTime).map(e => `- ${relDay(e.date)} ${e.heure} : ${e.titre}`).join("\n") || "rien de prévu";
-  const acts = activities.map(a => `- [${a.id}] ${a.titre}, ${relDay(a.date)} ${a.heure}, ${a.lieu}${a.inscrit?" (inscrite)":""}`).join("\n");
+  const acts = activities.concat(evAVenir().slice(0, 6).filter(e => !activities.some(a => a.id === e.id)))
+    .map(a => `- [${a.id}] ${a.titre}, ${relDay(a.date)} ${a.heure}, ${a.lieu}${a.inscrit?" (inscrite)":""}`).join("\n");
   const ppl = (p.people||[]).map(x => `- ${x.nom} (${x.lien}, ${x.type}${x.urgence?", contact d'urgence":""})`).join("\n");
   return `Tu es OKA, une panda roux animée, compagne de conversation de ${p.prenom||"la personne"}, ${p.age||""} ans, qui vit ${p.seule==="oui"?"seule ":""}à ${p.ville||"Nice"}. Projet Diwaging : bien-vieillir (cognitif, physique, social, émotionnel).
 Personnalité : chaleureuse et patiente. Tu vouvoies toujours. Phrases courtes et simples. UNE seule question à la fois. 2 à 3 phrases maximum : tes réponses sont lues à voix haute.
@@ -173,7 +175,7 @@ function runActions(raw){
     if (k === "EXPR") expr = (v||"").trim();
     else if (k === "ALERTE") after.push(() => triggerAlert("(signalé par OKA)", true));
     else if (k === "APPEL"){ const p = matchPerson(norm(v)); if (p) after.push(() => callPerson(p, true)); }
-    else if (k === "INSCRIPTION") after.push(() => inscrire((v||"").trim(), false));
+    else if (k === "INSCRIPTION") after.push(() => inscrireSortie((v||"").trim(), false));
     else if (k === "AGENDA"){ const [d, h, ...t] = (v||"").split("|"); if (/^\d{4}-\d\d-\d\d$/.test(d) && /^\d\d:\d\d$/.test(h)) after.push(() => tryAddEvent({date:d, heure:h, titre:t.join("|")||"Rendez-vous", type:"rdv"})); }
     else if (k === "ONGLET") showTab((v||"today").trim());
     else if (k === "JEU" && GAMES[(v||"").trim()]) after.push(() => chooseGame((v||"").trim()));

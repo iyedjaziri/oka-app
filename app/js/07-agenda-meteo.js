@@ -102,12 +102,16 @@ function checkReminders(force){
     const t = new Date(e.date + "T" + e.heure);
     const mins = (t - now)/60000;
     const k1 = e.id + "_veille", k2 = e.id + "_1h";
-    if (e.date === iso(addDays(now,1)) && now.getHours() >= 17 && !reminded[k1] && e.type === "rdv"){ reminded[k1] = 1; remind(e, "Petit rappel pour demain : " + e.titre + " à " + hourSpeech(e.heure) + "."); }
-    if (mins > 0 && mins <= 60 && !reminded[k2]){ reminded[k2] = 1; remind(e, "Rappel : " + e.titre + " dans " + Math.round(mins) + " minutes, à " + hourSpeech(e.heure) + "." + (e.lieu ? " C'est " + e.lieu + "." : "")); }
+    const sortie = e.type === "activite";
+    if (e.date === iso(addDays(now,1)) && now.getHours() >= 17 && !reminded[k1] && (e.type === "rdv" || sortie)){ reminded[k1] = 1;
+      if (sortie) remind(e, rappelSortie(e, "veille"), "heureux"); else remind(e, "Petit rappel pour demain : " + e.titre + " à " + hourSpeech(e.heure) + "."); }
+    if (mins > 0 && mins <= 60 && !reminded[k2]){ reminded[k2] = 1;
+      if (sortie) remind(e, rappelSortie(e, "bientot", mins), "heureux"); else remind(e, "Rappel : " + e.titre + " dans " + Math.round(mins) + " minutes, à " + hourSpeech(e.heure) + "." + (e.lieu ? " C'est " + e.lieu + "." : "")); }
   }
   store.set("reminded", reminded);
+  suiviSortie();
 }
-function remind(e, txt){ toast(txt, 9000); if (!av.listening) say(txt, "rappel", null, {queue:true}); }
+function remind(e, txt, expr){ toast(txt, 9000); if (!av.listening) say(txt, expr || "rappel", null, {queue:true}); }
 
 /* ================= MÉTÉO PRÉVENTIVE (open-meteo) ================= */
 const WMO = c => c===0?["sun","ensoleillé"]: c<=2?["cloudsun","peu nuageux"]: c===3?["cloud","couvert"]: c<=48?["fog","brouillard"]: c<=57?["rain","bruine"]: c<=67?["rain","pluie"]: c<=77?["snow","neige"]: c<=82?["rain","averses"]: c<=86?["snow","averses de neige"]: ["storm","orages"];

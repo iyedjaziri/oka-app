@@ -6,7 +6,7 @@ const COQUILLE = [
   "./", "index.html", "config.js", "manifest.webmanifest", "css/oka.css",
   "js/01-pictogrammes.js", "js/02-images.js", "js/03-donnees.js", "js/04-avatar.js", "js/05-voix-ecoute.js",
   "js/06-cerveau.js", "js/07-agenda-meteo.js", "js/08-liens-urgence.js", "js/09-interface.js",
-  "js/10-profil-reglages.js", "js/11-jeux.js", "js/12-compte.js", "js/13-demarrage.js",
+  "js/10-profil-reglages.js", "js/11-jeux.js", "js/12-compte.js", "js/13-sorties-ville.js", "js/14-ambiance.js", "js/15-demarrage.js",
   "img/logo.webp", "img/neutre.webp", "img/tendre.webp", "img/joie.webp", "img/gourmand.webp", "img/accueil.webp",
   "img/pensive.webp", "img/bravo.webp", "img/inquiete.webp", "img/rire.webp",
   "icons/oka-180.png", "icons/oka-192.png", "icons/oka-512.png"
@@ -22,12 +22,13 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/admin/")) return;
+  // la musique est lue par morceaux (requêtes partielles) : laissée au navigateur
+  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/admin/") || url.pathname.includes("/audio/")) return;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try{
       const r = await Promise.race([fetch(e.request), new Promise((_, ko) => setTimeout(() => ko(new Error("lent")), 4000))]);
-      if (r.ok) cache.put(e.request, r.clone());
+      if (r.status === 200) cache.put(e.request, r.clone());
       return r;
     }catch(err){
       return (await cache.match(e.request, {ignoreSearch:true})) || (e.request.mode === "navigate" ? cache.match("index.html") : Response.error());

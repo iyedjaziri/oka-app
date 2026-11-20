@@ -272,7 +272,8 @@ let sortiesView = "act";
 function viewSorties(){
   const url = ccasUrl(), ville = profile?.ville || "Nice", isNice = norm(ville).trim() === "nice";
   const fr = (profile?.pays || "FR") === "FR";
-  const seg = `<div class="seg"><button class="${sortiesView === "act" ? "on" : ""}" data-a="sv" data-i="act">${ic("star")} Activités de la semaine</button><button class="${sortiesView === "ccas" ? "on" : ""}" data-a="sv" data-i="ccas">${ic("building")} CCAS et associations</button></div>`;
+  const seg = `<div class="seg"><button class="${sortiesView === "act" ? "on" : ""}" data-a="sv" data-i="act">${ic("star")} Activités de la semaine</button><button class="${sortiesView === "ville" ? "on" : ""}" data-a="sv" data-i="ville">${ic("home")} Maisons des seniors</button><button class="${sortiesView === "ccas" ? "on" : ""}" data-a="sv" data-i="ccas">${ic("building")} CCAS et associations</button></div>`;
+  if (sortiesView === "ville") return seg + viewVille();
   if (sortiesView === "act") return seg + `<div class="plist2">${activities.slice().sort(byTime).map(a => `<div class="prow ${a.inscrit?"okrow":""}">
     <div class="pinfo"><div class="pn">${esc(a.titre)}</div><div class="small">${esc(relDay(a.date))} à ${a.heure.replace(":","h")} · ${esc(a.lieu)}</div></div>
     <div class="pact">${a.inscrit ? `<button class="btn sm alt" data-room="act_${a.id}">${ic("chat")}<span>Groupe</span></button><button class="btn sm ghost" data-unsub="${a.id}" aria-label="Se désinscrire">${ic("x")}</button>` : `<button class="btn sm" data-sub="${a.id}">S'inscrire</button>`}</div></div>`).join("")}</div>${activities.some(a => !String(a.id).startsWith("ann_")) ? `<p class="muted small" style="margin:6px 0 0">Activités d'exemple pour la démo.</p>` : ""}`;
@@ -307,6 +308,7 @@ function bindPanel(){
   P.querySelectorAll("[data-a=agf]").forEach(b => b.onclick = () => { agendaForm = !agendaForm; render(); });
   P.querySelectorAll("[data-fix]").forEach(b => b.onclick = () => fixClash(+b.dataset.fix));
   P.querySelectorAll("[data-sub]").forEach(b => b.onclick = () => inscrire(b.dataset.sub, true));
+  bindVille(P);
   P.querySelectorAll("[data-unsub]").forEach(b => b.onclick = () => desinscrire(b.dataset.unsub));
   P.querySelectorAll("[data-room]").forEach(b => b.onclick = () => { curRoom = b.dataset.room; unread[curRoom] = 0; store.set("unread", unread); tab = "chat"; render(); });
   P.querySelectorAll("[data-chatwith]").forEach(b => b.onclick = () => { curRoom = "proches"; showTab("chat"); });

@@ -81,17 +81,18 @@ document.getElementById("al_cancel").onclick = () => { endAlert(); postMsg("proc
 /* ================= ACTIVITÉS / INSCRIPTION ================= */
 const nextActivity = () => activities.filter(a => !a.inscrit && a.date >= iso(new Date())).sort(byTime)[0];
 function matchActivity(n){ return activities.find(a => norm(a.titre).split(" ").some(w => w.length > 4 && n.includes(w))); }
-function inscrire(id, speak){
+function inscrire(id, speak, suite){
   const a = activities.find(x => x.id === id); if (!a) return;
   if (a.inscrit){ if (speak) say("Vous êtes déjà inscrite à " + a.titre + ".", "bonne"); return; }
   const aev = {id:"act_"+a.id, date:a.date, heure:a.heure, titre:a.titre, type:"activite", lieu:a.lieu};
   a.inscrit = true;
-  openActivityRoom(a);
+  if ((a.participants || []).length) openActivityRoom(a);
   if (conflictsOf(aev).length){ saveAll(); render(); tryAddEvent(aev); return; }
   agenda.push(aev); agenda.sort(byTime);
   saveAll(); render();
-  toast("Inscrite : " + a.titre + ". Un groupe de discussion est ouvert.");
-  if (speak) say("C'est fait ! Vous êtes inscrite à " + a.titre + ", " + relDay(a.date) + " à " + hourSpeech(a.heure) + ". C'est noté dans votre agenda, et vous pouvez écrire aux autres participants dans les messages.", "bonne");
+  confettis(); // petite récompense
+  if (speak) say("C'est fait ! Vous êtes inscrite à " + a.titre + ", " + relDay(a.date) + " à " + hourSpeech(a.heure) + ". C'est noté dans votre agenda" +
+    (rooms["act_" + a.id] ? ", et vous pouvez écrire aux autres participants dans les messages." : ".") + rappelInscription(a), "bonne", suite);
 }
 function desinscrire(id){
   const a = activities.find(x => x.id === id); if (!a) return;

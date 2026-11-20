@@ -32,9 +32,10 @@ function startGame(){
 function gameEnd(res, extra){
   if (!G.s) return;
   G.s.over = true;
-  const t = (extra ? extra + " " : "") + (res === "win" ? "Bravo, vous avez gagné ! On en refait une ?" : res === "lose" ? "J'ai gagné cette fois ! Vous prenez votre revanche ?" : "Match nul ! C'était bien joué.");
+  const reco = sortieApresJeu(); // une seule question à la fois : la sortie remplace la relance
+  const t = (extra ? extra + " " : "") + (res === "win" ? "Bravo, vous avez gagné !" + (reco ? "" : " On en refait une ?") : res === "lose" ? "J'ai gagné cette fois !" + (reco ? "" : " Vous prenez votre revanche ?") : "Match nul ! C'était bien joué.");
   G.msg = t; render();
-  say(t, res === "win" ? "bonne" : res === "lose" ? "sociable" : "heureux");
+  say(t, res === "win" ? "bonne" : res === "lose" ? "sociable" : "heureux", reco);
 }
 const later = (f, ms) => setTimeout(() => { if (G.s && !G.s.over) f(); }, ms);
 

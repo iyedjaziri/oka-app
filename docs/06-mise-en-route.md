@@ -7,7 +7,8 @@ Architecture and rationale: `docs/05-architecture-deploiement.md`. This file is 
 app/                    the web app (published as-is on GitHub Pages, no build step)
   index.html            same markup as v3, plus the activation dialog
   css/oka.css           v3 styles, unchanged
-  img/*.webp            the 9 avatar images (were base64 in v3)
+  img/*.webp            the 9 avatar images (were base64 in v3) + logo
+  audio/*.mp3           calm music playlist (list in js/14-ambiance.js; not in the offline cache)
   js/01-…13-*.js        v3 script split by section, loaded in order (shared global scope)
   js/12-compte.js       NEW: device activation, announcements, AI relay calls
   config.js             generated (git-ignored): server URL + public anon key
@@ -18,6 +19,7 @@ supabase/
   functions/activer     activation code -> device token
   functions/annonces    announcements for a device
   functions/ia          AI relay (Claude Haiku 5.5, safety filters, quota)
+  functions/evenements  City of Nice senior events (official nice.fr WordPress API, 15-min cache)
 tools/                  config generator, local server, single-file build
 legacy/                 the original v3 file, untouched
 ```
@@ -71,7 +73,7 @@ npx supabase login
 npx supabase link --project-ref <ref>
 npx supabase db push
 npx supabase secrets set ANTHROPIC_API_KEY=... OKA_ORIGINES=https://<user>.github.io
-npx supabase functions deploy activer annonces ia --no-verify-jwt
+npx supabase functions deploy activer annonces ia evenements --no-verify-jwt
 ```
 In the dashboard: Authentication → Sign In / Providers → disable "Allow new users to sign up";
 Authentication → URL Configuration → Site URL `https://<user>.github.io/<repo>/admin/`.
