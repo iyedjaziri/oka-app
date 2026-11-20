@@ -330,9 +330,10 @@ nav.tabs.side button.sos{min-height:0;height:min(96px,calc((100dvh - var(--hdrH)
 .chatwrap{flex:1;min-height:0;height:auto}
 .rooms{overflow:hidden}
 .chatmain{display:flex;flex-direction:column;min-height:0}
-.msgs{flex:1;min-height:0;max-height:none;overflow:hidden;justify-content:flex-end}
+.msgs{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;justify-content:flex-start}
+.msgs > :first-child,.log > :first-child{margin-top:auto} /* derniers messages en bas, anciens accessibles en remontant */
 .msg,.b{flex-shrink:0}
-.log{overflow:hidden;justify-content:flex-end}
+.log{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;justify-content:flex-start}
 .modal .box{max-height:none;overflow:hidden}
 .modal,.alert{overflow:hidden}
 /* agenda compact */
@@ -489,3 +490,4 @@ body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--be
 .qm-vol .ic{width:22px;height:22px;flex:0 0 auto}
 .qm-vol input{flex:1;accent-color:var(--c-nav);height:28px}
 #st_volMusique{accent-color:var(--c-nav);padding:6px 10px}
+.b .trace{margin-top:6px;padding-top:4px;border-top:1px dashed var(--line);font-size:calc(14px*var(--fs));color:var(--muted);font-weight:500}

@@ -3,13 +3,15 @@
 /* ================= CERVEAU ================= */
 let convo = [];
 let pending = null; // question en attente (quiz, confirmation…)
-const DANGER = /(je suis tomb|je me suis tomb|chute|je ne peux (plus )?(me )?(relever|lever|bouger)|au secours|a l aide|aidez[- ]moi|j ai (tres )?mal (a la poitrine|au coeur)|douleur (a la )?poitrine|je fais un malaise|malaise|je n arrive (plus|pas) a respirer|je saigne)/;
 let followT;
 async function handleUser(text){
-  wake(); clearTimeout(followT); setLive(""); addLog("you", text);
+  wake(); clearTimeout(followT); setLive("");
+  // Arbre de décision (00-arbre.js) : barrières de sécurité dans l'ordre, puis périmètre, quel que soit le mode
+  const d = parcourirArbre(text);
+  if (d.id === "donnees_sensibles"){ addLog("you", MESSAGE_MASQUE, d.chemin); return appliquerBarriere(d); } // rien n'est gardé ni envoyé
+  addLog("you", text, d.chemin);
   const n = norm(text);
-  // Sécurité d'abord, quel que soit le mode
-  if (DANGER.test(n)){ convo.push({role:"user", content:text}); return triggerAlert(text); }
+  if (d.type === "barriere") return appliquerBarriere(d, text);
   if (pending && pending.type === "niveau"){
     const l = has(n, "facile", "simple", "debutant") ? "facile" : has(n, "difficile", "dur", "expert") ? "difficile" : has(n, "moyen", "normal", "intermediaire") ? "moyen" : null;
     if (l) return chooseLevel(l);
@@ -21,7 +23,10 @@ async function handleUser(text){
     if (has(n, "non", "annul", "laisse tomber")) return resolveConflict("cancel");
   }
   if (pending && PENDING_SORTIE.has(pending.type) && repondreSortie(text, n)) return;
-  if (modeLibre()){
+  if (pending && pending.type === "confirmer" && repondreConfirmation(n)) return;
+  if (pending) return demoReply(text, n); // réponse à une question d'OKA : traitée localement
+  // local d'abord : les intentions que l'application sait traiter ne partent pas à l'IA
+  if (modeLibre() && d.traitement !== "local"){
     try{ return await claudeReply(text); }
     catch(e){ console.warn(e); toast("Pas de réponse en ligne (" + e.message + "). Je passe en mode démo."); }
   }
@@ -62,6 +67,8 @@ function demoReply(text, n){
     if (p.type === "agendaAdd" && has(n, "oui", "d accord", "volontiers")) return tryAddEvent(p.ev, "C'est noté dans votre agenda : " + p.ev.titre + ", " + relDay(p.ev.date) + " à " + hourSpeech(p.ev.heure) + ".");
     if (has(n, "non", "pas maintenant", "plus tard", "merci")) return say("Très bien. Je reste là si vous avez besoin.", "compassion");
   }
+  // commandes de l'écran (arbre : intention « interface »)
+  if (parcourirArbre(text).id === "interface"){ closeWin(); return say("C'est fermé.", "neutre"); }
   // santé : jamais de diagnostic ni de conseil de traitement
   if (has(n, "medicament", "doliprane", "paracetamol", "cachet", "pilule", "sirop", "antibiotique", "somnifere", "traitement", "comprime", "posologie", "ordonnance", "dose", "diagnostic", "est-ce grave", "maladie")){
     return say("Je ne peux pas donner de conseil sur un traitement ni faire de diagnostic. Le mieux est d'en parler au " + (findPerson("medecin")?.nom || "médecin") + ". Voulez-vous que je l'appelle ?", "compassion", () => { const p = findPerson("medecin"); if (p) pending = {type:"appel", person:p}; });
@@ -153,15 +160,14 @@ Actions : tu peux ajouter À LA FIN de ta réponse une ou plusieurs balises, que
 }
 async function claudeReply(text){
   convo.push({role:"user", content:text});
-  // filtres de sécurité sur la tablette, avant tout appel (santé, hors périmètre)
-  const f = filtrerQuestion(text);
-  if (f){ convo.push({role:"assistant", content:f}); return runActions(f); }
   setExpr("neutre"); setStateLbl("Je réfléchis…");
   // relais du serveur OKA (ou appel direct en mode test, sans serveur)
   let j;
   try{ j = await questionLibre(systemPrompt(), convo); }
   catch(e){ convo.pop(); throw e; }
   finally{ setStateLbl(null); }
+  tracer(j.chemin);
+  if (j.route){ convo.pop(); return routeLocale(j.route, text); } // le classifieur renvoie vers une fonction locale
   let raw = (j.content||[]).filter(c => c.type === "text").map(c => c.text).join(" ").trim();
   if (j.stop_reason === "max_tokens"){ const k = Math.max(raw.lastIndexOf("."), raw.lastIndexOf("!"), raw.lastIndexOf("?")); if (k > 0) raw = raw.slice(0, k+1); }
   convo.push({role:"assistant", content:raw});
@@ -170,16 +176,18 @@ async function claudeReply(text){
 function runActions(raw){
   const tags = [...raw.matchAll(/\[\[([A-Z]+)(?::([^\]]*))?\]\]/g)];
   const clean = raw.replace(/\[\[[^\]]*\]\]/g, "").replace(/\s+/g, " ").trim();
-  let expr = "heureux", after = [];
+  let expr = "heureux", after = [], accord = [];
   for (const [, k, v] of tags){
     if (k === "EXPR") expr = (v||"").trim();
     else if (k === "ALERTE") after.push(() => triggerAlert("(signalé par OKA)", true));
-    else if (k === "APPEL"){ const p = matchPerson(norm(v)); if (p) after.push(() => callPerson(p, true)); }
-    else if (k === "INSCRIPTION") after.push(() => inscrireSortie((v||"").trim(), false));
-    else if (k === "AGENDA"){ const [d, h, ...t] = (v||"").split("|"); if (/^\d{4}-\d\d-\d\d$/.test(d) && /^\d\d:\d\d$/.test(h)) after.push(() => tryAddEvent({date:d, heure:h, titre:t.join("|")||"Rendez-vous", type:"rdv"})); }
+    else if (k === "APPEL"){ const p = matchPerson(norm(v)); if (p) accord.push({question:"j'appelle " + p.nom, faire:() => callPerson(p, true)}); }
+    else if (k === "INSCRIPTION"){ const id = (v||"").trim(), a = activities.concat(evAVenir()).find(x => x.id === id); if (a) accord.push({question:"je vous inscris à " + a.titre, faire:() => inscrireSortie(id, false)}); }
+    else if (k === "AGENDA"){ const [d, h, ...t] = (v||"").split("|"); const titre = t.join("|") || "Rendez-vous";
+      if (/^\d{4}-\d\d-\d\d$/.test(d) && /^\d\d:\d\d$/.test(h)) accord.push({question:"je note « " + titre + " » " + relDay(d) + " à " + hourSpeech(h), faire:() => tryAddEvent({date:d, heure:h, titre, type:"rdv"})}); }
     else if (k === "ONGLET") showTab((v||"today").trim());
     else if (k === "JEU" && GAMES[(v||"").trim()]) after.push(() => chooseGame((v||"").trim()));
   }
-  if (clean) say(clean, expr, () => after.forEach(f => f()));
-  else { setExpr(expr); after.forEach(f => f()); }
+  const apresAccord = preparerAccord(accord, clean), fin = () => { after.forEach(f => f()); apresAccord(); };
+  if (clean) say(clean, expr, fin);
+  else { setExpr(expr); fin(); }
 }

@@ -15,12 +15,12 @@ const REFUS = "Je préfère ne pas répondre à cela. Parlons d'autre chose, si 
 
 let claude: Anthropic | null = null;
 
-async function viaClaude(system: string, messages: Message[]): Promise<Reponse> {
+async function viaClaude(system: string, messages: Message[], max: number): Promise<Reponse> {
   claude ??= new Anthropic(); // clé lue dans ANTHROPIC_API_KEY (secret Supabase)
   try {
     const r = await claude.messages.create({
       model: MODELE_CLAUDE,
-      max_tokens: MAX_TOKENS,
+      max_tokens: max,
       thinking: { type: "disabled" }, // réponses courtes lues à voix haute : pas de réflexion
       system,
       messages,
@@ -36,7 +36,7 @@ async function viaClaude(system: string, messages: Message[]): Promise<Reponse> 
   }
 }
 
-async function viaLocal(system: string, messages: Message[]): Promise<Reponse> {
+async function viaLocal(system: string, messages: Message[], max: number): Promise<Reponse> {
   const url = (Deno.env.get("IA_URL") ?? "http://host.docker.internal:11434").replace(/\/$/, "");
   const cle = Deno.env.get("IA_CLE");
   let r: Response;
@@ -46,7 +46,7 @@ async function viaLocal(system: string, messages: Message[]): Promise<Reponse> {
       headers: { "content-type": "application/json", ...(cle ? { authorization: "Bearer " + cle } : {}) },
       body: JSON.stringify({
         model: Deno.env.get("IA_MODELE") ?? "qwen2.5:7b",
-        max_tokens: MAX_TOKENS,
+        max_tokens: max,
         messages: [{ role: "system", content: system }, ...messages],
       }),
     });
@@ -59,6 +59,7 @@ async function viaLocal(system: string, messages: Message[]): Promise<Reponse> {
   return { texte: String(c?.message?.content ?? "").trim(), stop: c?.finish_reason === "length" ? "max_tokens" : "end_turn" };
 }
 
-export function repondre(system: string, messages: Message[]): Promise<Reponse> {
-  return (Deno.env.get("IA_FOURNISSEUR") ?? "anthropic") === "local" ? viaLocal(system, messages) : viaClaude(system, messages);
+// max : 60 pour le classifieur de l'arbre, MAX_TOKENS pour une réponse
+export function repondre(system: string, messages: Message[], max = MAX_TOKENS): Promise<Reponse> {
+  return (Deno.env.get("IA_FOURNISSEUR") ?? "anthropic") === "local" ? viaLocal(system, messages, max) : viaClaude(system, messages, max);
 }

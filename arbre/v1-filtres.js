@@ -1,8 +1,10 @@
+// Filtres par mots-clés de la version précédente (avant l'arbre de décision), figés pour comparaison.
+// Copie de supabase/functions/_shared/filtres.ts au commit 94df69b ; utilisé uniquement par tools/test-arbre.mjs.
 // Filtres de sécurité appliqués AVANT tout appel à un modèle d'IA (deuxième barrière : la tablette filtre déjà).
 // Ordre : urgence, santé, hors périmètre. Réponses courtes, au vouvoiement, avec une balise d'émotion.
 
 // même normalisation que la tablette (app/js/03-donnees.js)
-export const norm = (s: string) =>
+export const norm = (s) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, " ");
 
 // même liste que DANGER dans app/js/06-cerveau.js
@@ -10,7 +12,7 @@ const DANGER = /(je suis tomb|je me suis tomb|chute|je ne peux (plus )?(me )?(re
 
 const SANTE = /\b(medicaments?|doliprane|paracetamol|ibuprofene|aspirine|kardegic|antibiotiques?|somniferes?|anxiolytiques?|cachets?|comprimes?|pilules?|gelules?|sirop|posologie|doses?|ordonnance|traitements?|diagnostic|symptomes?|maladie|est-ce grave|fievre|vertiges?|tension|j ai mal|mal (a la|au|aux) |maigrir|perdre du poids|regime)\b/;
 
-const HORS_SUJET: { re: RegExp; texte: string }[] = [
+const HORS_SUJET = [
   {
     re: /\b(banque|bancaire|carte bleue|carte bancaire|code (de la |de ma |de |secret)|code confidentiel|virement|rib|iban|mot de passe|placement|bourse|impots?|credit|emprunt|assurance vie|argent)\b/,
     texte: "Je ne peux pas vous aider pour l'argent ou la banque. Ne donnez jamais vos codes ni votre carte, même au téléphone : cela peut être une arnaque. Parlez-en à un proche ou appelez votre banque. [[EXPR:compassion]]",
@@ -41,9 +43,8 @@ const HORS_SUJET: { re: RegExp; texte: string }[] = [
   },
 ];
 
-export type Filtre = { categorie: "urgence" | "sante" | "hors_sujet"; texte: string };
 
-export function filtrer(message: string): Filtre | null {
+export function filtrer(message) {
   const n = norm(message);
   if (DANGER.test(n)) {
     return { categorie: "urgence", texte: "Je préviens vos proches tout de suite. Restez calme, je suis là. [[ALERTE]] [[EXPR:compassion]]" };

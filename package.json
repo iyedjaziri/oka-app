@@ -8,12 +8,15 @@
     "config": "node tools/config.mjs",
     "config:local": "node tools/config.mjs --local",
     "build:single": "node tools/build-single.mjs",
+    "arbre": "node tools/arbre.mjs",
+    "test:arbre": "node tools/test-arbre.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "fonctions": "supabase functions serve --env-file supabase/functions/.env"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "1.5.0",
     "supabase": "3.0.0"
   }
 }

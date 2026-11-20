@@ -213,6 +213,7 @@
     <h3>Démonstration</h3>
     <div class="grid2">
       <div><label>Scénario météo</label><select class="f" id="st_wx"><option value="reel">Météo réelle (open-meteo)</option><option value="canicule">Forcer : canicule</option><option value="froid">Forcer : nuit froide</option><option value="medit">Forcer : épisode méditerranéen</option></select></div>
+      <div><label for="st_trace">Parcours de l'arbre dans l'historique</label><select class="f" id="st_trace"><option value="">Automatique (fichier de démo)</option><option value="1">Afficher</option><option value="0">Masquer</option></select></div>
       <div><label>Réponses simulées dans le chat</label><select class="f" id="st_sim"><option value="1">Oui (démo)</option><option value="0">Non</option></select></div>
     </div>
     <label>Les 8 émotions d'OKA (touchez pour la voir parler)</label>
@@ -262,6 +263,7 @@
 <div class="toast hidden" id="toast"></div>
 
 <script src="config.js"></script>
+<script src="js/00-arbre.js"></script>
 <script src="js/01-pictogrammes.js"></script>
 <script src="js/02-images.js"></script>
 <script src="js/03-donnees.js"></script>
@@ -276,6 +278,7 @@
 <script src="js/12-compte.js"></script>
 <script src="js/13-sorties-ville.js"></script>
 <script src="js/14-ambiance.js"></script>
-<script src="js/15-demarrage.js"></script>
+<script src="js/15-decision.js"></script>
+<script src="js/16-demarrage.js"></script>
 </body>
 </html>

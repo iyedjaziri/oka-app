@@ -118,6 +118,8 @@ function postMsg(rid, from, text, kind){
   saveAll(); render();
 }
 function sendChat(text){
+  const d = parcourirArbre(text);
+  if (d.id === "donnees_sensibles"){ say(d.reponse, d.expr); toast("Message non envoyé : il contenait un code ou un mot de passe."); return; }
   postMsg(curRoom, me(), text);
   if (settings.sim === "1"){
     const r = rooms[curRoom], who = r.membres[Math.floor(Math.random()*r.membres.length)];

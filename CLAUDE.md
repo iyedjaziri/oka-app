@@ -16,6 +16,7 @@ Read first, in this order:
 5. `docs/04-scenarios-test.md` – 20 test scenarios (normal / limit / trap)
 6. `docs/05-architecture-deploiement.md` – MVP architecture (PWA + Supabase), onboarding, hosting, phased plan
 7. `docs/06-mise-en-route.md` – repository layout, local run, deployment (GitHub Pages + Supabase)
+8. `docs/07-arbre-decisionnel.md` – decision tree: safety barriers, scope, AI classifier, output check, test results
 
 ## Main deliverable
 The web app in `app/` (PWA, published on GitHub Pages) + the Supabase back end in `supabase/`.
@@ -52,6 +53,9 @@ See `docs/06-mise-en-route.md` for layout, commands and deployment.
 ## Working rules
 - Use git; commit before every significant change so the demo can always be rolled back.
 - Never regenerate whole files: make targeted edits.
+- Safety rules and scope live in `arbre/arbre.json` (single source). Edit it, then `npm run arbre` and
+  `npm run test:arbre`. Never edit the generated files (`app/js/00-arbre.js`, `supabase/functions/_shared/arbre.js`)
+  or the generated sections of docs 04 and 07.
 - After changes, load the page in a headless browser and check for JS errors; run the relevant scenarios in
   `docs/04-scenarios-test.md`. The team tests voice and microphone by hand.
 - When a spec doc and the code disagree, or two spec docs disagree, do not guess: check

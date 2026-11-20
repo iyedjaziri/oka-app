@@ -130,7 +130,7 @@ function setStateLbl(txt, listen){
 
 /* ================= HISTORIQUE DE LA CONVERSATION ================= */
 let log = store.get("log", []), liveText = "";
-function addLog(who, text){ log.push({who, text, ts:Date.now()}); log = log.slice(-150); store.set("log", log); renderLog(); if (who === "oka") setSimpleSub(text); }
+function addLog(who, text, chemin){ log.push(chemin ? {who, text, ts:Date.now(), chemin} : {who, text, ts:Date.now()}); log = log.slice(-150); store.set("log", log); renderLog(); if (who === "oka") setSimpleSub(text); }
 function setLive(t){ liveText = t || ""; renderLog(); if (liveText) setSimpleSub(liveText, true); }
 function setSimpleSub(t, you){
   const el = document.getElementById("simpleSub");
@@ -143,7 +143,7 @@ function bubble(m, i, arr){
   const last = arr && i === arr.length-1 && m.who === "oka" ? " last" : "";
   return m.who === "oka"
     ? `<div class="b oka${last}"><div class="w"><img src="${IMG_SRC.neutre}" alt="">OKA · ${t}</div>${esc(m.text)}</div>`
-    : `<div class="b you${m.live?" live":""}"><div class="w">${esc(me())} · ${m.live ? "en train de parler…" : t}</div>${esc(m.text)}</div>`;
+    : `<div class="b you${m.live?" live":""}"><div class="w">${esc(me())} · ${m.live ? "en train de parler…" : t}</div>${esc(m.text)}${m.chemin && montrerParcours() ? `<div class="trace">Arbre : ${esc(m.chemin.join(" › "))}</div>` : ""}</div>`;
 }
 function renderLog(){
   const el = document.getElementById("log"); if (!el) return;
