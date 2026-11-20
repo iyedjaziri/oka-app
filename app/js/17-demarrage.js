@@ -27,6 +27,7 @@ function demarrer(){
   chargerAnnonces(); setInterval(chargerAnnonces, 30*60000);
   chargerEvenements(false); setInterval(() => chargerEvenements(false), 6*3600e3);
   chargerMessages(); setInterval(chargerMessages, 60000); // une vérification par minute : suffisant et sobre
+  setInterval(propositionReguliere, 60000); // sorties proposées quelques fois par jour
 }
 // tablette distribuée : activation par code avant le profil
 if (activationRequise()) ouvrirActivation(demarrer); else demarrer();

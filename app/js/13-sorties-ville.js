@@ -128,9 +128,28 @@ function sortieAuHasard(){
 }
 // appelée par gameEnd (11-jeux.js) : renvoie la proposition à dire après le résultat, ou null
 function sortieApresJeu(){
-  if (pending || Date.now() - derniereReco < 30*60e3) return null;
+  if (pending || Date.now() - derniereReco < 30*60e3 || resteAProposer() <= 0) return null;
   const s = sortieAuHasard();
-  return s ? () => proposerSortie(s) : null;
+  return s ? () => { compterProposition(); proposerSortie(s); } : null;
+}
+
+/* ---- propositions régulières : quelques sorties par jour, réparties entre 9 h 30 et 18 h 30 ---- */
+// Nombre réglable (Réglages avancés, 0 = jamais) ; la proposition de fin de partie compte dans ce total.
+let propositions = store.get("propositions", {jour:"", n:0});
+const nbPropositions = () => Math.max(0, +(settings.suggestionsJour ?? 2));
+function propositionsDuJour(){ const t = iso(new Date()); if (propositions.jour !== t) propositions = {jour:t, n:0}; return propositions; }
+const resteAProposer = () => nbPropositions() - propositionsDuJour().n;
+function compterProposition(){ propositionsDuJour().n++; store.set("propositions", propositions); }
+function propositionReguliere(){
+  const max = nbPropositions(), p = propositionsDuJour();
+  if (p.n >= max || !profile || pending || av.speaking || av.listening || alertRun || Date.now() - derniereReco < 30*60e3) return;
+  if (tab === "jeux" && winOpen && G.s && !G.s.over) return; // pas en pleine partie
+  const d = new Date(), h = d.getHours() + d.getMinutes() / 60, debut = 9.5, fin = 18.5;
+  // la n-ième proposition du jour est due au milieu de sa part de la journée
+  if (h < debut || h > fin || h < debut + (fin - debut) * (p.n + .5) / max) return;
+  const s = sortieAuHasard();
+  if (!s) return;
+  compterProposition(); proposerSortie(s);
 }
 function proposerSortie(s){
   derniereReco = Date.now(); store.set("derniereReco", derniereReco);
