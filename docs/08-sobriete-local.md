@@ -45,7 +45,7 @@ The decision tree always runs in the app, so a small model follows exactly the s
 |---|---|---|
 | Local model | `qwen2.5:1.5b` via Ollama (~1 GB) | Fits in the 3.9 GB of memory available to WSL on the test laptop, runs on processor only. A 3–4 B model (e.g. `qwen2.5:3b`, `llama3.2:3b`) is better but needs ~3 GB free. |
 | Voice | Pocket TTS (Kyutai), French model, int8 | Open source (MIT code), runs on processor, French voice Estelle plus about twenty other timbres usable with the French model, voice cloning with consent. |
-| Voice on a weak machine | Pre-recorded fixed sentences (`npm run voix:clips`) | On the test laptop, live synthesis is slower than speech; recordings cost nothing at use time, work offline and in the demo file. |
+| Fixed sentences | Pre-recorded once (`npm run voix:clips`) | Recordings cost nothing at use time, work offline and in the demo file; live synthesis is kept for variable sentences. |
 | Small-model accuracy | Few-shot examples in the tree (doc 07) | Small models classify much better with a few examples per category. |
 
 Voice cloning: Pocket TTS can clone a voice from a short recording. Only with the written consent of the person
@@ -71,4 +71,23 @@ WSL memory: by default WSL gets a fraction of the PC's memory. To run a 3 B mode
 
 ## 6. Measurements on the test laptop
 <!-- debut:mesures -->
+Measured on 20 Nov 2026 on the test laptop: Intel i7-8565U (4 cores / 8 threads, 15 W), no GPU, WSL2 with 3.9 GB
+of memory, processor power set to 15 W. Energy figures are estimates (method in §3).
+
+| What | Result |
+|---|---|
+| Decision tree, full pipeline with `qwen2.5:1.5b` (30 scenarios, `npm run test:arbre:local`) | 30 / 30 correct; 16 of 30 requests needed the model (the others were handled locally) |
+| Same run, consumption | 16 model calls, ≈ 32 s and ≈ 0.06 Wh per call (classifier + answer) |
+| One free question in the app, compact prompt (classifier + answer) | ≈ 42 s, ≈ 55 mWh |
+| Same question with the full OKA prompt (agenda, relatives, actions) | ≈ 230 s, ≈ 410 mWh → the compact prompt is 7× cheaper |
+| Voice, live (Pocket TTS, French, int8), machine otherwise idle | ≈ 2× faster than speech; ≈ 3–7 mWh per sentence |
+| Voice while the language model runs on the same machine | slower than speech (both compete for 4 cores and 3.9 GB) |
+| Pre-recorded fixed sentences (`npm run voix:clips`, voice Estelle) | 59 sentences, 138 s of audio, generated once in 70 s, 4.4 MB; 0 computation at use time |
+| Requests handled with no AI at all | most everyday requests (agenda, weather, games, outings, safety) – see the app counters |
+
+Order of magnitude: one local free question ≈ 0.05 Wh, about what a 5 W LED bulb uses in 40 seconds.
+
+Lessons: on a 15 W laptop the small model is frugal but slow for conversation; a machine with more memory (8 GB for
+WSL) or a recent processor answers several times faster. Keep the prompt short for local models, and record fixed
+sentences instead of synthesising them each time.
 <!-- fin:mesures -->

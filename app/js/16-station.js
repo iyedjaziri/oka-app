@@ -22,13 +22,24 @@ function moteurIA(){
   if (settings.moteurIA === "local" && iaLocaleDispo()) return "local";
   return (serveurOk() ? appareil && appareil.ia : modeTest() && settings.cleTest) ? "claude" : null;
 }
-async function appelStationIA({system, messages, max_tokens}){
-  const r = await fetch(stationUrl() + "/ia", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({system, messages, max_tokens:max_tokens || 300})});
+async function appelStationIA({system, messages, max_tokens, json}){
+  const r = await fetch(stationUrl() + "/ia", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({system, messages, max_tokens:max_tokens || 120, json:!!json})});
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.erreur || "station " + r.status);
   noterConso(j.mesure);
   return {texte:j.texte, stop:j.stop};
 }
+
+// prompt court pour le petit modèle : un processeur lit lentement les longs prompts, et un petit modèle invente
+// à partir d'un contexte trop riche (agenda, proches…) ; les fonctions locales s'occupent déjà de ces sujets
+function promptCompact(){
+  const p = profile || {};
+  return `Tu es OKA, une panda roux, compagne de conversation de ${p.prenom || "la personne"}${p.age ? ", " + p.age + " ans" : ""}, qui vit à ${p.ville || "Nice"}. ` +
+    "Tu vouvoies. Tu réponds en français, en deux phrases courtes au maximum, simplement et avec chaleur. " +
+    "Tu n'inventes rien sur la personne ni sur les faits : si tu ne sais pas, dis-le. Termine par une seule question ouverte, ou aucune.";
+}
+// au plus trois phrases, quoi qu'écrive le modèle
+const troisPhrases = t => (t.match(/[^.!?…]+[.!?…]+/g) || [t]).slice(0, 3).join(" ").trim();
 
 /* ---- sobriété : qui a répondu, et combien d'énergie a coûté le calcul local ---- */
 let sobriete = Object.assign({depuis:new Date().toISOString(), demandes:0, iaLocale:0, claude:0, wh:0, phrasesVoix:0}, store.get("sobriete", {}));

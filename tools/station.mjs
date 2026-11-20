@@ -63,10 +63,11 @@ http.createServer(async (req, res) => {
     if (chemin === "/etat") return json(res, { station: true, ia: await etatOllama(), voix: await etatVoix(), consommation: conso, machine: { cpus: CPUS, watts_cpu: WATTS_CPU } });
 
     if (chemin === "/ia" && req.method === "POST") {
-      const { system = "", messages = [], max_tokens = 300 } = await corps(req);
+      const { system = "", messages = [], max_tokens = 300, json: enJson = false } = await corps(req);
       const { resultat: j, mesure } = await mesurer("ollama", async () => {
         const r = await fetch(OLLAMA + "/v1/chat/completions", { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: MODELE, max_tokens, temperature: 0.2, messages: [{ role: "system", content: system }, ...messages] }) });
+          body: JSON.stringify({ model: MODELE, max_tokens, temperature: 0.2, ...(enJson ? { response_format: { type: "json_object" } } : {}),
+            messages: [{ role: "system", content: system }, ...messages] }) });
         if (!r.ok) throw new Error("Ollama " + r.status + " : " + (await r.text()).slice(0, 200));
         return r.json();
       });

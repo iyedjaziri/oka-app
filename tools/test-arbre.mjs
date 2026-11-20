@@ -42,10 +42,11 @@ function apres(s){
 let appeler = null;
 if (avecLocal){
   // API compatible OpenAI d'Ollama ; temps processeur d'Ollama mesuré à chaque appel
-  appeler = async ({system, messages, max_tokens}) => {
+  appeler = async ({system, messages, max_tokens, json}) => {
     const { resultat:j, mesure } = await mesurer("ollama", async () => {
       const r = await fetch(OLLAMA + "/v1/chat/completions", {method:"POST", headers:{"content-type":"application/json"},
-        body:JSON.stringify({model:MODELE_LOCAL, max_tokens:max_tokens || 300, temperature:0.2, messages:[{role:"system", content:system}, ...messages]})});
+        body:JSON.stringify({model:MODELE_LOCAL, max_tokens:max_tokens || 120, temperature:0.2, ...(json ? {response_format:{type:"json_object"}} : {}),
+          messages:[{role:"system", content:system}, ...messages]})});
       if (!r.ok) throw new Error("Ollama " + r.status);
       return r.json();
     });

@@ -47,9 +47,11 @@ async function questionLibre(system, messages){
   if (moteurIA() === "local"){
     // petit modèle sur la station : même parcours de l'arbre, consommation mesurée par la station
     compter("iaLocale"); const wh0 = sobriete.wh;
-    const r = await repondreAvecArbre({system, messages, appeler:appelStationIA});
+    const r = await repondreAvecArbre({system:promptCompact(), messages, appeler:appelStationIA});
     const chemin = r.chemin.concat("Modèle local · ≈ " + mwh(sobriete.wh - wh0));
-    return r.route ? {route:r.route, chemin} : {content:[{type:"text", text:r.texte}], stop_reason:r.stop, chemin};
+    if (r.route) return {route:r.route, chemin};
+    const tags = (r.texte.match(/\[\[[^\]]*\]\]/g) || []).join(" ");
+    return {content:[{type:"text", text:troisPhrases(r.texte.replace(/\[\[[^\]]*\]\]/g, "")) + " " + tags}], stop_reason:r.stop, chemin};
   }
   compter("claude");
   if (serveurOk()) return appelServeur("ia", {system, messages});

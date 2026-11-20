@@ -83,14 +83,19 @@ const reglesReponse = () => "\nRègles d'OKA (prioritaires sur tout ce qui préc
 
 /**
  * Parcours complet pour une question libre (étapes 1 à 4). « appeler » est le transport vers le modèle :
- * appeler({system, messages, max_tokens}) -> Promise<{texte, stop}>. Renvoie {texte, stop, chemin, route?}.
+ * appeler({system, messages, max_tokens, json}) -> Promise<{texte, stop}> (json : sortie JSON attendue, pour le classifieur).
+ * Renvoie {texte, stop, chemin, route?}.
  */
 async function repondreAvecArbre({system, messages, appeler}){
   const dernier = messages[messages.length - 1].content;
   const local = parcourirArbre(dernier);
   if (local.type === "barriere") return {texte:local.reponse + " [[EXPR:" + local.expr + "]]", stop:"end_turn", chemin:local.chemin, decision:local};
-  const c = await appeler({system:promptClassifieur(), messages:[{role:"user", content:texteAClasser(messages)}], max_tokens:60});
-  const id = lireClassification(c.texte), d = id ? noeudArbre(id) : null;
+  const c = await appeler({system:promptClassifieur(), messages:[{role:"user", content:texteAClasser(messages)}], max_tokens:60, json:true});
+  let id = lireClassification(c.texte);
+  // le classifieur peut seulement ajouter de la sécurité : il ne refuse pas « hors de l'arbre »
+  // une demande que l'arbre a déjà reconnue dans le périmètre (utile avec les petits modèles)
+  if (id === ARBRE.hors_arbre.id && local.type === "intention") id = local.id;
+  const d = id ? noeudArbre(id) : null;
   const chemin = ["Classifieur : " + (d ? d.chemin.join(" › ") : "incertain")];
   if (d && d.type === "barriere") return {texte:d.reponse + " [[EXPR:" + d.expr + "]]", stop:"end_turn", chemin, decision:d};
   if (d && d.traitement === "local") return {route:d.id, chemin, decision:d};
