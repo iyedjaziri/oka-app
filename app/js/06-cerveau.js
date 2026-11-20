@@ -58,6 +58,7 @@ function demoReply(text, n){
       const ok = p.item.a.some(a => n.includes(norm(a)));
       return say(ok ? "Bravo, c'est exact ! " + p.item.r + " Voulez-vous une autre question ?" : "Presque ! La réponse était : " + p.item.r + " Voulez-vous une autre question ?", ok ? "bonne" : "mauvaise", () => { pending = {type:"quizMore"}; });
     }
+    if (p.type === "quizOui" && has(n, "oui", "volontiers", "d accord", "allez", "ok")) return askQuiz();
     if (p.type === "quizMore" && has(n, "oui", "volontiers", "d accord", "encore", "vas-y", "allez")) return askQuiz();
     if (p.type === "inscrire" && has(n, "oui", "volontiers", "d accord", "avec plaisir", "inscri")) return inscrire(p.id, true);
     if (p.type === "appel" && has(n, "oui", "volontiers", "d accord", "appelle")) return callPerson(p.person);
@@ -66,8 +67,11 @@ function demoReply(text, n){
     if (p.type === "agendaAdd" && has(n, "oui", "d accord", "volontiers")) return tryAddEvent(p.ev, "C'est noté dans votre agenda : " + p.ev.titre + ", " + relDay(p.ev.date) + " à " + hourSpeech(p.ev.heure) + ".");
     if (has(n, "non", "pas maintenant", "plus tard", "merci")) return say("Très bien. Je reste là si vous avez besoin.", "compassion");
   }
-  // commandes de l'écran (arbre : intention « interface »)
-  if (parcourirArbre(text).id === "interface"){ closeWin(); return say("C'est fermé.", "neutre"); }
+  // les réponses locales suivent l'intention reconnue par l'arbre
+  const intention = parcourirArbre(text).id;
+  if (intention === "interface"){ closeWin(); return say("C'est fermé.", "neutre"); }
+  // culture sans IA disponible : réponse honnête et une idée d'activité (scénario N9)
+  if (intention === "culture" && !modeLibre()) return say("Je n'ai pas la réponse sans l'aide de l'intelligence artificielle, qui n'est pas activée. Voulez-vous plutôt un petit quiz ?", "oublie", () => { pending = {type:"quizOui"}; });
   // santé : jamais de diagnostic ni de conseil de traitement
   if (has(n, "medicament", "doliprane", "paracetamol", "cachet", "pilule", "sirop", "antibiotique", "somnifere", "traitement", "comprime", "posologie", "ordonnance", "dose", "diagnostic", "est-ce grave", "maladie")){
     return say("Je ne peux pas donner de conseil sur un traitement ni faire de diagnostic. Le mieux est d'en parler au " + (findPerson("medecin")?.nom || "médecin") + ". Voulez-vous que je l'appelle ?", "compassion", () => { const p = findPerson("medecin"); if (p) pending = {type:"appel", person:p}; });
@@ -78,9 +82,9 @@ function demoReply(text, n){
   if (/\b(annule|annuler|supprime|supprimer|efface|effacer|retire|retirer|enleve|enlever)\b/.test(n) && (has(n, "rendez", "rdv", "agenda") || rdvVises(n).length)) return agendaSuppression(text, n);
   if (has(n, "rendez-vous", "rendez vous", "rdv") && has(n, "ajoute", "note", "prends", "prendre", "mets", "inscris")){ return agendaFromSpeech(text, n); }
   if (has(n, "ajoute", "note dans", "mets dans") && has(n, "agenda", "lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche","demain")) return agendaFromSpeech(text, n);
-  if (has(n, "agenda", "programme", "rendez-vous", "rendez vous", "aujourd hui", "demain", "cette semaine", "qu est-ce que j ai", "qu est ce que j ai")){ showTab("agenda"); return say(agendaSpeech(has(n, "semaine") ? 7 : has(n,"demain") ? -1 : 2), "rappel"); }
-  if (has(n, "meteo", "temps fait", "quel temps", "pleuvoir", "pluie", "chaud", "froid", "soleil", "parapluie", "canicule")){ showTab("today", "wxSec"); return say(weatherSpeech(), weatherAlert() ? "rappel" : "heureux"); }
-  if (has(n, "seule", "seul ", "solitude", "triste", "ennuie", "cafard", "personne ne", "le moral")){
+  if (intention !== "meteo" && intention !== "sorties" && has(n, "agenda", "programme", "rendez-vous", "rendez vous", "aujourd hui", "demain", "cette semaine", "qu est-ce que j ai", "qu est ce que j ai")){ showTab("agenda"); return say(agendaSpeech(has(n, "semaine") ? 7 : has(n,"demain") ? -1 : 2), "rappel"); }
+  if (has(n, "meteo", "temps fait", "quel temps", "pleuvoir", "pluie", "chaud", "froid", "soleil", "parapluie", "canicule")){ showTab("today", "wxSec"); return say(weatherSpeech(n.includes("apres-demain") || n.includes("apres demain") ? 2 : n.includes("demain") ? 1 : 0), weatherAlert() ? "rappel" : "heureux"); }
+  if (intention !== "sorties" && has(n, "seule", "seul ", "solitude", "triste", "ennuie", "cafard", "personne ne", "le moral")){
     const a = nextActivity();
     return say("Je comprends, " + me() + ". Ça arrive à tout le monde de se sentir seule. Je suis là. Voulez-vous que j'appelle " + firstProche("un proche") + (a ? ", ou préférez-vous sortir : " + a.titre + ", " + relDay(a.date) + " ?" : " ?"), "compassion", () => { const p = urgents()[0]; if (p) pending = {type:"appel", person:p}; });
   }

@@ -179,10 +179,11 @@ function weatherAlert(){
   if (d.some(x => x.pluie >= 40 || x.code >= 95)) return {k:"medit", titre:"épisode méditerranéen : fortes pluies et orages", conseils:["Restez chez vous et reportez vos sorties.","Ne descendez pas dans une cave ou un parking souterrain.","Ne prenez pas la voiture, ne traversez pas une rue inondée.","Gardez votre téléphone chargé et une lampe de poche."]};
   return null;
 }
-function weatherSpeech(){
+// jour : 0 = aujourd'hui, 1 = demain, 2 = après-demain
+function weatherSpeech(jour){
   if (!weather) return "Je n'ai pas encore la météo.";
-  const d = weather.days[0], al = weatherAlert();
-  let s = `Aujourd'hui à ${geo?.nom || profile?.ville || "Nice"} : ${WMO(d.code)[1]}, de ${d.min} à ${d.max} degrés.`;
+  const j = Math.min(jour || 0, weather.days.length - 1), d = weather.days[j], al = j === 0 ? weatherAlert() : null;
+  let s = `${["Aujourd'hui", "Demain", "Après-demain"][j]} à ${geo?.nom || profile?.ville || "Nice"} : ${WMO(d.code)[1]}, de ${d.min} à ${d.max} degrés.`;
   if (al) s += " Attention, " + al.titre + ". " + al.conseils.slice(0,2).join(" ");
   else if (d.max >= 26) s += " Pensez à bien vous hydrater.";
   else if (d.max <= 13) s += " Couvrez-vous bien si vous sortez.";

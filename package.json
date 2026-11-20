@@ -13,6 +13,7 @@
     "test:arbre:local": "node tools/test-arbre.mjs --local",
     "station": "node tools/station.mjs",
     "voix:clips": "node tools/voix-clips.mjs",
+    "captures": "node tools/captures-scenarios.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "1.5.0",
+    "playwright-core": "1.49.1",
     "supabase": "3.0.0"
   }
 }
