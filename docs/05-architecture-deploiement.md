@@ -1,7 +1,7 @@
 # Architecture and deployment (MVP)
 
-Status: proposal agreed in principle with the team (20 Nov 2026). Hosting choice and AI provider still open
-(see "Open decisions" below). Nothing is implemented yet.
+Status: implemented as an MVP on 20 Nov 2026 (see `docs/06-mise-en-route.md`). Hosting choice and AI provider still open
+(see "Open decisions" below). Change from the plan: no Vite; the app stays build-free (see §3).
 
 ## 1. Goal
 Turn the single-file demo `OKA-avatar-parlant.html` into a **deployable, distributable web application** with
@@ -47,8 +47,9 @@ Web technology is the right choice: any browser, old tablets, no app store. The 
                               publish announcements
 ```
 
-- **Front end**: the existing vanilla JS, split into modules, built with Vite, served as a PWA (manifest +
-  service worker). No framework rewrite. `vite-plugin-singlefile` can still produce a single HTML file for the jury.
+- **Front end**: the existing vanilla JS, split by section into classic scripts (same global scope as v3, so no
+  logic change), served as a PWA (manifest + service worker). No framework, no bundler: GitHub Pages serves `app/`
+  as-is. `tools/build-single.mjs` still produces a single HTML file for an offline jury demo.
 - **Back end**: Supabase. Auth, Postgres with Row Level Security, Edge Functions, and the Studio dashboard to
   manage accounts securely. No custom Node server needed for the MVP.
 - **Back office**: one extra page, same visual style as OKA, for staff. Studio remains available to the
@@ -137,7 +138,7 @@ shown in existing views.
 ## 11. Phased plan
 0. **Baseline**: `git init`, reference commit, reference screenshots.
 1. **Split, no logic change**: CSS → `style.css`, base64 images → `.webp` files, JS → modules following the
-   existing sections (`STOCKAGE`, `VOIX`, `CERVEAU`, `AGENDA`, `JEUX`…). Vite build. Screenshots identical.
+   existing sections (`STOCKAGE`, `VOIX`, `CERVEAU`, `AGENDA`, `JEUX`…). No build step.
 2. **PWA**: manifest + service worker, installable, offline. Unblocks the voice plan (doc 03).
 3. **Answer engine as a pure module**: safety pipeline testable with the doc 04 scenarios (G2–G4).
 4. **Supabase**: schema + RLS, staff auth, activation codes, `ai-relay`, announcements.

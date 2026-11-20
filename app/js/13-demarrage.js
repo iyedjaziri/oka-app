@@ -24,5 +24,10 @@ setInterval(() => { if (tab === "agenda" || tab === "today") render(); }, 60000)
 applyDisplay();
 initRooms(); renderChips(); render();
 if (!log.length) addLog("oka", "Bonjour ! Appuyez sur « Parler », écrivez avec le crayon, ou touchez un onglet."); else renderLog();
-if (!profile){ openProfile(); fillProfile(DEMO_PROFILE()); }
-else { loadWeather(); setTimeout(() => checkReminders(), 3000); }
+function demarrer(){
+  if (!profile){ openProfile(); fillProfile(DEMO_PROFILE()); }
+  else { loadWeather(); setTimeout(() => checkReminders(), 3000); }
+  chargerAnnonces(); setInterval(chargerAnnonces, 30*60000);
+}
+// tablette distribuée : activation par code avant le profil
+if (activationRequise()) ouvrirActivation(demarrer); else demarrer();

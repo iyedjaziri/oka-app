@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#FFFDF9">
 <title>OKA – avatar parlant · Diwaging</title>
 <link rel="stylesheet" href="css/oka.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/oka-192.png">
+<link rel="apple-touch-icon" href="icons/oka-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OKA">
 </head>
 <body>
 
@@ -167,11 +172,8 @@
     <h2>Réglages</h2>
     <h3>Cerveau</h3>
     <label>Mode</label>
-    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (clé API Claude)</option></select>
-    <div class="grid2">
-      <div><label>Clé API Claude</label><input class="f" id="st_key" type="password" placeholder="sk-ant-…"></div>
-      <div><label>Modèle</label><input class="f" id="st_model"></div>
-    </div>
+    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (tablette activée)</option></select>
+    <div class="row" style="margin-top:8px;justify-content:space-between"><span class="muted small" id="st_compte"></span><button class="btn ghost sm" id="st_activer">Activer la tablette</button></div>
     <h3>Voix</h3>
     <div class="grid2">
       <div><label>Voix du navigateur</label><select class="f" id="st_voice"></select></div>
@@ -199,6 +201,18 @@
   </div>
 </div>
 
+<!-- Activation de la tablette -->
+<div class="modal hidden" id="activationModal">
+  <div class="box" style="max-width:640px">
+    <h2>Activer OKA</h2>
+    <p>Entrez le code d'activation remis par votre conseiller.</p>
+    <input class="f" id="ac_code" placeholder="ABCD-EFGH" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-size:calc(28px*var(--fs));letter-spacing:.12em;text-align:center">
+    <p class="small" id="ac_msg" aria-live="polite"></p>
+    <p class="muted small">Votre profil, votre agenda et vos conversations restent sur cette tablette. Si vous l'acceptez, les questions libres sont envoyées à un service d'intelligence artificielle (Anthropic, aux États-Unis) ; OKA ne les conserve pas.</p>
+    <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="ac_demo">Essayer sans compte</button><button class="btn" id="ac_ok">Activer</button></div>
+  </div>
+</div>
+
 <!-- Double rendez-vous -->
 <div class="modal hidden" id="confModal">
   <div class="box" style="max-width:640px">
@@ -223,6 +237,7 @@
 <button class="seasonbtn" id="seasonBtn" type="button">🍂</button>
 <div class="toast hidden" id="toast"></div>
 
+<script src="config.js"></script>
 <script src="js/01-pictogrammes.js"></script>
 <script src="js/02-images.js"></script>
 <script src="js/03-donnees.js"></script>
@@ -234,6 +249,7 @@
 <script src="js/09-interface.js"></script>
 <script src="js/10-profil-reglages.js"></script>
 <script src="js/11-jeux.js"></script>
-<script src="js/12-demarrage.js"></script>
+<script src="js/12-compte.js"></script>
+<script src="js/13-demarrage.js"></script>
 </body>
 </html>

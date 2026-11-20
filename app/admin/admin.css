@@ -1,0 +1,55 @@
+/* Espace pro OKA : mêmes couleurs que l'application (thème automne), mise en page de bureau avec défilement. */
+:root{
+  --c-bg:#FBF6EE; --c-card:#FFFDF9; --c-btn:#4A2C18; --c-nav:#C85A17; --c-acc:#F2A93B; --c-text:#261710; --c-alert:#C92A1D;
+  --muted:color-mix(in srgb, var(--c-text) 70%, var(--c-card));
+  --line:color-mix(in srgb, var(--c-text) 18%, var(--c-card));
+  --soft:color-mix(in srgb, var(--c-text) 6%, var(--c-card));
+  --orange-l:color-mix(in srgb, var(--c-acc) 24%, var(--c-card));
+  --alert-l:color-mix(in srgb, var(--c-alert) 13%, var(--c-card));
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --c-bg:#1d1612; --c-card:#2a201a; --c-btn:#F2A93B; --c-text:#f3e9df; --c-nav:#f08a4b; }
+  :root:not([data-theme="light"]) .btn:not(.alt):not(.ghost){ color:#261710 }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--c-bg);color:var(--c-text);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+header{display:flex;align-items:center;gap:14px;padding:10px 20px;background:var(--c-card);border-bottom:3px solid var(--c-acc);flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;color:var(--c-btn)}
+.logo img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 30%;border:3px solid var(--c-nav)}
+header .qui{margin-left:auto;color:var(--muted);font-size:14px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{border:0;background:transparent;padding:8px 12px;border-radius:var(--r);font-weight:700;cursor:pointer;color:var(--c-text)}
+nav button.on{background:var(--orange-l);color:var(--c-btn)}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:24px;margin:0 0 12px} h2{font-size:19px;margin:22px 0 8px}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--c-card);margin:10px 0}
+.card.alerte{background:var(--alert-l)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.row > div{flex:1 1 180px;min-width:0}
+label{display:block;font-weight:700;font-size:14px;margin:0 0 4px}
+.f{width:100%;border:2px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--c-card)}
+textarea.f{min-height:70px;resize:vertical}
+.btn{border:0;border-radius:var(--r);padding:9px 14px;font-weight:700;background:var(--c-btn);color:#fff;cursor:pointer;white-space:nowrap}
+.btn.alt{background:var(--c-card);color:var(--c-btn);border:2px solid var(--c-btn)}
+.btn.ghost{background:var(--soft);color:var(--c-text)}
+.btn.red{background:var(--c-alert);color:#fff}
+.btn.sm{padding:5px 10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.muted{color:var(--muted)} .small{font-size:14px}
+.err{color:var(--c-alert);font-weight:600}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--c-card);border:1px solid var(--line);border-radius:var(--r)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+td .acts{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:var(--soft)}
+.pill.actif{background:var(--orange-l)} .pill.suspendu{background:var(--alert-l)}
+.login{max-width:420px;margin:60px auto}
+.code{font-size:40px;font-weight:800;letter-spacing:.14em;text-align:center;padding:12px;border:3px dashed var(--c-acc);border-radius:var(--r);margin:10px 0;user-select:all}
+dialog{border:0;border-radius:var(--r);border-top:6px solid var(--c-acc);padding:22px;max-width:520px;width:calc(100% - 32px);background:var(--c-card);color:var(--c-text)}
+dialog::backdrop{background:rgba(59,42,32,.55)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--c-btn);color:#fff;padding:10px 16px;border-radius:var(--r);z-index:9;max-width:calc(100% - 32px)}
+@media (max-width:640px){ header{padding:10px 16px} th:nth-child(n+4),td:nth-child(n+4){display:none} td:last-child,th:last-child{display:table-cell} }

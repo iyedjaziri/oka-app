@@ -20,9 +20,9 @@ async function handleUser(text){
     if (has(n, "les deux", "garde", "quand meme")) return resolveConflict("both");
     if (has(n, "non", "annul", "laisse tomber")) return resolveConflict("cancel");
   }
-  if (settings.mode === "claude" && settings.key){
+  if (modeLibre()){
     try{ return await claudeReply(text); }
-    catch(e){ console.warn(e); toast("Pas de réponse de Claude (" + e.message + "). Je passe en mode démo."); }
+    catch(e){ console.warn(e); toast("Pas de réponse en ligne (" + e.message + "). Je passe en mode démo."); }
   }
   demoReply(text, n);
 }
@@ -151,16 +151,13 @@ Actions : tu peux ajouter À LA FIN de ta réponse une ou plusieurs balises, que
 }
 async function claudeReply(text){
   convo.push({role:"user", content:text});
-  convo = convo.slice(-16);
+  convo = convo.slice(-6);
   setExpr("neutre"); setStateLbl("Je réfléchis…");
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST",
-    headers:{"content-type":"application/json", "x-api-key":settings.key, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:settings.model, max_tokens:1024, system:systemPrompt(), messages:convo})
-  });
-  setStateLbl(null);
-  if (!r.ok){ convo.pop(); throw new Error("erreur " + r.status); }
-  const j = await r.json();
+  // relais du serveur OKA : modèle, limites et filtres de sécurité sont fixés côté serveur
+  let j;
+  try{ j = await appelServeur("ia", {system:systemPrompt(), messages:convo}); }
+  catch(e){ convo.pop(); throw e; }
+  finally{ setStateLbl(null); }
   let raw = (j.content||[]).filter(c => c.type === "text").map(c => c.text).join(" ").trim();
   if (j.stop_reason === "max_tokens"){ const k = Math.max(raw.lastIndexOf("."), raw.lastIndexOf("!"), raw.lastIndexOf("?")); if (k > 0) raw = raw.slice(0, k+1); }
   convo.push({role:"assistant", content:raw});

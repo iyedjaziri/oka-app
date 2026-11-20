@@ -152,8 +152,8 @@ function render(){
   const n = Object.values(unread).reduce((a,b) => a+b, 0), dot = document.getElementById("chatDot");
   dot.textContent = n; dot.classList.toggle("hidden", !n);
   const b = document.getElementById("modeBadge");
-  const claude = settings.mode === "claude" && settings.key;
-  b.textContent = claude ? "Conversation libre (Claude)" : "Mode démo"; b.classList.toggle("claude", !!claude);
+  const claude = modeLibre();
+  b.textContent = claude ? "Conversation libre" : "Mode démo"; b.classList.toggle("claude", !!claude);
   const P = document.getElementById("panel");
   P.innerHTML = `<div id="panelIn" class="${tab === "chat" ? "fill" : ""}">` + ({today:viewToday, agenda:viewAgenda, proches:viewProches, sorties:viewSorties, chat:viewChat, urgence:viewUrgence, log:() => "", jeux:viewJeux}[tab] || viewToday)() + `</div>`;
   bindPanel();
@@ -201,6 +201,7 @@ function viewToday(){
   return `<h2>Bonjour ${esc(me())}</h2>
   ${cl.map(([a,b], i) => `<div class="card warn"><div class="big" style="font-size:calc(22px*var(--fs))">${ic("alert")} Deux rendez-vous en même temps</div><div style="font-size:calc(20px*var(--fs))">${esc(relDay(a.date))} : ${esc(a.titre)} (${a.heure.replace(":","h")}) et ${esc(b.titre)} (${b.heure.replace(":","h")})</div><button class="btn sm orange" style="margin-top:8px" data-fix="${i}">${ic("calendar")} Proposer un report</button></div>`).join("")}
   ${al ? `<div class="card ${al.k==="froid"?"blue":"red"}"><div class="big">${ic("alert")} Météo préventive : ${esc(al.titre)}</div><ul class="adv">${al.conseils.map(c => `<li>${esc(c)}</li>`).join("")}</ul><button class="btn sm" style="margin-top:8px" data-say="wx">${ic("speaker")} Écouter les conseils</button></div>` : ""}
+  ${viewAnnonces()}
   <h3>Prochain rendez-vous</h3>
   ${next ? `<div class="card blue"><div class="big">${esc(next.titre)}</div><div style="font-size:calc(22px*var(--fs))">${esc(relDay(next.date))} à ${next.heure.replace(":","h")}${next.lieu?" · "+esc(next.lieu):""}</div></div>` : `<div class="card">Rien de prévu.</div>`}
   <h3 id="wxSec">Météo</h3>${wx}
@@ -231,7 +232,7 @@ function viewSorties(){
   const seg = `<div class="seg"><button class="${sortiesView === "act" ? "on" : ""}" data-a="sv" data-i="act">${ic("star")} Activités de la semaine</button><button class="${sortiesView === "ccas" ? "on" : ""}" data-a="sv" data-i="ccas">${ic("building")} CCAS et associations</button></div>`;
   if (sortiesView === "act") return seg + `<div class="plist2">${activities.slice().sort(byTime).map(a => `<div class="prow ${a.inscrit?"okrow":""}">
     <div class="pinfo"><div class="pn">${esc(a.titre)}</div><div class="small">${esc(relDay(a.date))} à ${a.heure.replace(":","h")} · ${esc(a.lieu)}</div></div>
-    <div class="pact">${a.inscrit ? `<button class="btn sm alt" data-room="act_${a.id}">${ic("chat")}<span>Groupe</span></button><button class="btn sm ghost" data-unsub="${a.id}" aria-label="Se désinscrire">${ic("x")}</button>` : `<button class="btn sm" data-sub="${a.id}">S'inscrire</button>`}</div></div>`).join("")}</div><p class="muted small" style="margin:6px 0 0">Activités d'exemple pour la démo.</p>`;
+    <div class="pact">${a.inscrit ? `<button class="btn sm alt" data-room="act_${a.id}">${ic("chat")}<span>Groupe</span></button><button class="btn sm ghost" data-unsub="${a.id}" aria-label="Se désinscrire">${ic("x")}</button>` : `<button class="btn sm" data-sub="${a.id}">S'inscrire</button>`}</div></div>`).join("")}</div>${activities.some(a => !String(a.id).startsWith("ann_")) ? `<p class="muted small" style="margin:6px 0 0">Activités d'exemple pour la démo.</p>` : ""}`;
   return seg + `
   <div class="card blue"><div class="big">${ic("building")} CCAS de ${esc(ville)}</div>
   ${fr ? `<p style="margin:6px 0">Le Centre Communal d'Action Sociale accompagne les seniors : aides, repas, activités, visites.</p><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Ouvrir l'annuaire des CCAS ${geo?.admin2 ? "· "+esc(geo.admin2) : ""}</a><div class="muted small" style="margin-top:6px">${esc(url)}</div>`

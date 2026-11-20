@@ -1,0 +1,17 @@
+{
+  "name": "OKA – compagne Diwaging",
+  "short_name": "OKA",
+  "description": "OKA, la panda roux qui vous accompagne au quotidien et vous relie à vos proches et à votre quartier.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FBF6EE",
+  "theme_color": "#FFFDF9",
+  "icons": [
+    { "src": "icons/oka-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/oka-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/oka-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

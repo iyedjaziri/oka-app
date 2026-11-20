@@ -45,7 +45,9 @@ document.getElementById("btnProfile").onclick = openProfile;
 /* ================= RÉGLAGES ================= */
 const SM = document.getElementById("settingsModal");
 document.getElementById("btnSettings").onclick = () => {
-  for (const k of ["mode","key","model","rate","elkey","elvoice","wx","sim","fs","theme","dark"]) document.getElementById("st_"+k).value = settings[k];
+  for (const k of ["mode","rate","elkey","elvoice","wx","sim","fs","theme","dark"]) document.getElementById("st_"+k).value = settings[k];
+  document.getElementById("st_compte").textContent = compteTexte();
+  const sa = document.getElementById("st_activer"); sa.classList.toggle("hidden", !serveurOk()); sa.textContent = appareil ? "Désactiver la tablette" : "Activer la tablette";
   loadVoices(); document.getElementById("st_voice").value = settings.voice || "";
   document.getElementById("st_rateV").textContent = settings.rate;
   SM.classList.remove("hidden");
@@ -54,12 +56,11 @@ document.getElementById("st_rate").oninput = e => document.getElementById("st_ra
 document.getElementById("st_cancel").onclick = () => SM.classList.add("hidden");
 document.getElementById("st_save").onclick = () => {
   const old = settings.wx;
-  for (const k of ["mode","key","model","elkey","elvoice","wx","sim","voice","fs","theme","dark"]) settings[k] = document.getElementById("st_"+k).value.trim();
+  for (const k of ["mode","elkey","elvoice","wx","sim","voice","fs","theme","dark"]) settings[k] = document.getElementById("st_"+k).value.trim();
   applyDisplay();
   settings.rate = +document.getElementById("st_rate").value;
-  if (!settings.model) settings.model = "claude-haiku-5-5";
   store.set("settings", settings); SM.classList.add("hidden");
-  if (settings.mode === "claude" && !settings.key) toast("Ajoutez une clé API Claude pour la conversation libre. En attendant, OKA reste en mode démo.");
+  if (settings.mode === "claude" && !iaDisponible()) toast("La conversation libre demande une tablette activée, avec l'accord de la personne. En attendant, OKA reste en mode démo.");
   if (old !== settings.wx) loadWeather();
   render();
 };

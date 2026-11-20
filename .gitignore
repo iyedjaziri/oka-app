@@ -7,3 +7,4 @@ app/config.js
 supabase/.temp/
 supabase/.branches/
 supabase/functions/.env
+/deno.lock

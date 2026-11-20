@@ -80,8 +80,7 @@ let profile = store.get("profile", null);
 let agenda = (store.get("agenda", null) || demoAgenda()).filter(e => !/\(test\)/i.test(e.titre));
 let activities = store.get("activities", null) || demoActivities();
 let rooms = store.get("rooms", null);
-let settings = Object.assign({mode:"demo", key:"", model:"claude-haiku-5-5", voice:"", rate:0.85, elkey:"", elvoice:"", wx:"reel", sim:"1", fs:"moyen", theme:"automne", dark:"0"}, store.get("settings", {}));
-if (settings.model === "claude-sonnet-5-5") settings.model = "claude-haiku-5-5"; // ancienne valeur par défaut
+let settings = Object.assign({mode:"demo", voice:"", rate:0.85, elkey:"", elvoice:"", wx:"reel", sim:"1", fs:"moyen", theme:"automne", dark:"0"}, store.get("settings", {}));
 let reminded = store.get("reminded", {});
 let weather = null, geo = null;
 let unread = store.get("unread", {});
