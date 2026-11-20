@@ -9,6 +9,7 @@ let html = lire("index.html");
 html = html.replace('<link rel="stylesheet" href="css/oka.css">', () => "<style>\n" + lire("css/oka.css") + "</style>");
 html = html.replace(/<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n/g, "");
 html = html.replace('<script src="config.js"></script>\n', "");
+html = html.replace(/src="img\/(\w+)\.webp"/g, (_, k) => 'src="data:image/webp;base64,' + fs.readFileSync(new URL("img/" + k + ".webp", app)).toString("base64") + '"');
 const scripts = [...html.matchAll(/<script src="(js\/[^"]+)"><\/script>\n/g)];
 for (const [balise, src] of scripts) {
   let js = lire(src);

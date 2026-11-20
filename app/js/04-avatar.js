@@ -10,7 +10,6 @@ for (const k in IMG_SRC){ const i = new Image(); i.onload = () => { loaded++;
     const d = x.getImageData(0,0,8,8).data; let r=0,g=0,b=0; for (let j=0;j<d.length;j+=4){ r+=d[j]; g+=d[j+1]; b+=d[j+2]; } const n = d.length/4;
     BG[k] = `rgb(${Math.round(r/n)},${Math.round(g/n)},${Math.round(b/n)})`; }catch(e){} };
   i.src = IMG_SRC[k]; IM[k] = i; }
-document.getElementById("logoImg").src = IMG_SRC.neutre;
 
 const av = {
   expr:"neutre", img:"neutre", prev:null, fade:1,

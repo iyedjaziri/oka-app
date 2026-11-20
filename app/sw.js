@@ -7,7 +7,7 @@ const COQUILLE = [
   "js/01-pictogrammes.js", "js/02-images.js", "js/03-donnees.js", "js/04-avatar.js", "js/05-voix-ecoute.js",
   "js/06-cerveau.js", "js/07-agenda-meteo.js", "js/08-liens-urgence.js", "js/09-interface.js",
   "js/10-profil-reglages.js", "js/11-jeux.js", "js/12-compte.js", "js/13-demarrage.js",
-  "img/neutre.webp", "img/tendre.webp", "img/joie.webp", "img/gourmand.webp", "img/accueil.webp",
+  "img/logo.webp", "img/neutre.webp", "img/tendre.webp", "img/joie.webp", "img/gourmand.webp", "img/accueil.webp",
   "img/pensive.webp", "img/bravo.webp", "img/inquiete.webp", "img/rire.webp",
   "icons/oka-180.png", "icons/oka-192.png", "icons/oka-512.png"
 ];

@@ -407,6 +407,7 @@ nav.tabs.side button.sos{min-height:0;height:min(96px,calc((100dvh - var(--hdrH)
 /* tailles en pixels : changer la taille du texte ne déplace ni l'en-tête ni la roue */
 header{min-height:72px}
 header .logo{font-size:28px}
+header .logo img{width:56px;height:56px;border:0;border-radius:0;object-fit:contain;object-position:center;background:none}
 .gearbtn{margin-left:auto;width:52px;height:52px;flex:0 0 52px;display:flex;align-items:center;justify-content:center;border:2px solid var(--line);background:var(--paper);border-radius:50%;color:var(--ink);padding:0}
 .gearbtn .ic{width:28px;height:28px;transition:transform .25s}
 .gearbtn:hover,.gearbtn.on{border-color:var(--c-nav);color:var(--c-nav)}
