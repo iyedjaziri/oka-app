@@ -91,17 +91,26 @@ let elAudio = null, actx = null;
 // lit un fichier audio de voix (IA locale, ElevenLabs) : les lèvres suivent le volume réel
 async function jouerAudio(blob, s, token, vitesse){
   const url = URL.createObjectURL(blob);
-  elAudio = new Audio(url); elAudio.playbackRate = vitesse || 1; elAudio.preservesPitch = true;
+  const audio = elAudio = new Audio(url); audio.playbackRate = vitesse || 1; audio.preservesPitch = true;
   actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-  if (actx.state === "suspended") actx.resume();
-  const srcN = actx.createMediaElementSource(elAudio), an = actx.createAnalyser(); an.fftSize = 512;
-  srcN.connect(an); an.connect(actx.destination);
-  const buf = new Uint8Array(an.fftSize);
-  lipStart(s, 1);
-  const tick = () => { if (!lip.active) return; an.getByteTimeDomainData(buf); let sum = 0; for (const x of buf){ const v = (x-128)/128; sum += v*v; } lip.vol = Math.sqrt(sum/buf.length); requestAnimationFrame(tick); };
-  elAudio.onplay = tick;
-  elAudio.onended = () => { URL.revokeObjectURL(url); lipStop(); setTimeout(() => nextSentence(token), 200); };
-  await elAudio.play();
+  // avant le premier geste, Chrome garde le circuit son en pause : on n'attend pas plus de 300 ms
+  if (actx.state === "suspended") await Promise.race([actx.resume().catch(() => {}), new Promise(r => setTimeout(r, 300))]);
+  let an = null;
+  if (actx.state === "running"){ // circuit son actif : les lèvres suivent le volume réel
+    const srcN = actx.createMediaElementSource(audio); an = actx.createAnalyser(); an.fftSize = 512;
+    srcN.connect(an); an.connect(actx.destination);
+  } // sinon lecture directe (un circuit en pause rendrait le son muet et bloquerait la suite)
+  const buf = an ? new Uint8Array(an.fftSize) : null;
+  const tick = () => { if (!lip.active || !an) return; an.getByteTimeDomainData(buf); let sum = 0; for (const x of buf){ const v = (x-128)/128; sum += v*v; } lip.vol = Math.sqrt(sum/buf.length); requestAnimationFrame(tick); };
+  lipStart(s, an ? 1 : settings.rate);
+  // garde-fou : une phrase qui ne démarre pas ou ne finit pas ne bloque jamais OKA
+  let fin = false, garde = setTimeout(() => terminer(), 8000);
+  const terminer = () => { if (fin) return; fin = true; clearTimeout(garde); try{ audio.pause(); }catch(e){} URL.revokeObjectURL(url); lipStop();
+    if (token === speakToken) setTimeout(() => nextSentence(token), 200); };
+  audio.onloadedmetadata = () => { clearTimeout(garde); if (isFinite(audio.duration)) garde = setTimeout(terminer, (audio.duration / audio.playbackRate + 3) * 1000); };
+  audio.onplay = tick;
+  audio.onended = terminer; audio.onerror = terminer;
+  try{ await audio.play(); }catch(e){ fin = true; clearTimeout(garde); URL.revokeObjectURL(url); lipStop(); throw e; } // l'appelant passe à la voix du navigateur
 }
 async function speakEleven(s, token){
   try{
