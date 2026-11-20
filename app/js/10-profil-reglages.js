@@ -47,6 +47,7 @@ const SM = document.getElementById("settingsModal");
 document.getElementById("btnSettings").onclick = () => {
   for (const k of ["mode","rate","elkey","elvoice","wx","sim","fs","theme","dark"]) document.getElementById("st_"+k).value = settings[k];
   document.getElementById("st_compte").textContent = compteTexte();
+  document.getElementById("st_testWrap").classList.toggle("hidden", !modeTest()); document.getElementById("st_cleTest").value = settings.cleTest || "";
   const sa = document.getElementById("st_activer"); sa.classList.toggle("hidden", !serveurOk()); sa.textContent = appareil ? "Désactiver la tablette" : "Activer la tablette";
   loadVoices(); document.getElementById("st_voice").value = settings.voice || "";
   document.getElementById("st_rateV").textContent = settings.rate;
@@ -57,10 +58,11 @@ document.getElementById("st_cancel").onclick = () => SM.classList.add("hidden");
 document.getElementById("st_save").onclick = () => {
   const old = settings.wx;
   for (const k of ["mode","elkey","elvoice","wx","sim","voice","fs","theme","dark"]) settings[k] = document.getElementById("st_"+k).value.trim();
+  if (modeTest()) settings.cleTest = document.getElementById("st_cleTest").value.trim();
   applyDisplay();
   settings.rate = +document.getElementById("st_rate").value;
   store.set("settings", settings); SM.classList.add("hidden");
-  if (settings.mode === "claude" && !iaDisponible()) toast("La conversation libre demande une tablette activée, avec l'accord de la personne. En attendant, OKA reste en mode démo.");
+  if (settings.mode === "claude" && !iaDisponible()) toast(!modeTest() ? "La conversation libre demande une tablette activée, avec l'accord de la personne. En attendant, OKA reste en mode démo." : "Ajoutez une clé de test pour la conversation libre. En attendant, OKA reste en mode démo.");
   if (old !== settings.wx) loadWeather();
   render();
 };

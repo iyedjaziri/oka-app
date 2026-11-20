@@ -125,7 +125,7 @@ function applyTheme(){
 let currentSeason = "automne";
 document.getElementById("seasonBtn").onclick = () => {
   settings.theme = SEASONS[(SEASONS.indexOf(currentSeason) + 1) % 4];
-  store.set("settings", settings); applyTheme(); toast("Couleurs : " + SEASON_NAME[settings.theme]);
+  store.set("settings", settings); applyTheme();
 };
 document.getElementById("btnDark").onclick = () => { settings.dark = settings.dark === "1" ? "0" : "1"; store.set("settings", settings); applyTheme(); };
 const FS = {petit:.85, moyen:1, grand:1.3};
@@ -238,8 +238,7 @@ function viewToday(){
   const t = iso(new Date());
   const next = agenda.filter(e => e.date > t || (e.date === t && e.heure >= hm())).sort(byTime)[0];
   const al = weatherAlert();
-  const wx = weather ? `<div class="wx">${weather.days.map((d,i) => `<div class="card"><div class="small muted">${i===0?"Aujourd'hui":i===1?"Demain":JOURS[new Date(d.date+"T12:00").getDay()]}</div><div class="e">${wxIc(d.code)}</div><div class="big">${d.max}°</div><div class="muted">min ${d.min}°${d.pluie>=1?` · ${Math.round(d.pluie)} mm`:""}</div></div>`).join("")}</div>
-     <p class="muted small">Source : ${esc(weather.src)}${geo?" · "+esc(geo.nom):""}</p>` : `<p class="muted">Chargement de la météo…</p>`;
+  const wx = weather ? `<div class="wx">${weather.days.map((d,i) => `<div class="card"><div class="small muted">${i===0?"Aujourd'hui":i===1?"Demain":JOURS[new Date(d.date+"T12:00").getDay()]}</div><div class="e">${wxIc(d.code)}</div><div class="big">${d.max}°</div><div class="muted">min ${d.min}°${d.pluie>=1?` · ${Math.round(d.pluie)} mm`:""}</div></div>`).join("")}</div>` : `<p class="muted">Chargement de la météo…</p>`;
   const ins = activities.filter(a => a.inscrit).length;
   const cl = agendaClashes();
   return `<h2>Bonjour ${esc(me())}</h2>

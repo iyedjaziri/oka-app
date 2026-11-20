@@ -30,6 +30,9 @@ npm run dev            # http://localhost:8000  ·  back office: /admin/
 With an empty `config.js` OKA behaves exactly like v3 in demo mode: no activation, no free questions.
 
 Single offline file for a demo on a USB key: `npm run build:single` → `dist/OKA-avatar-parlant.html`.
+In that file only, Réglages avancés shows a "Clé API Claude – mode test" field: free questions then go straight
+from the browser to Claude Haiku 5.5 (local health/scope filters first, no message or length cap). The key stays in
+that browser's storage: never use this file on a distributed tablet. The served app never shows this field.
 
 ## 2. Full stack locally (Supabase in Docker)
 Prerequisite: Docker usable by your user. Under WSL2: enable Docker Desktop's WSL integration, or

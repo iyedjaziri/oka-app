@@ -182,8 +182,9 @@
     <h2>Réglages</h2>
     <h3>Cerveau</h3>
     <label>Mode</label>
-    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (tablette activée)</option></select>
+    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (questions à Claude)</option></select>
     <div class="row" style="margin-top:8px;justify-content:space-between"><span class="muted small" id="st_compte"></span><button class="btn ghost sm" id="st_activer">Activer la tablette</button></div>
+    <div id="st_testWrap" class="hidden" style="margin-top:8px"><label for="st_cleTest">Clé API Claude – mode test</label><input class="f" id="st_cleTest" type="password" placeholder="sk-ant-…" autocomplete="off"><p class="muted small" style="margin:4px 0 0">Fichier de démo uniquement. La clé reste dans ce navigateur : ne jamais utiliser ce fichier sur une tablette distribuée.</p></div>
     <h3>Voix</h3>
     <div class="grid2">
       <div><label>Voix du navigateur</label><select class="f" id="st_voice"></select></div>

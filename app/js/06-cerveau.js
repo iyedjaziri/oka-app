@@ -151,11 +151,13 @@ Actions : tu peux ajouter À LA FIN de ta réponse une ou plusieurs balises, que
 }
 async function claudeReply(text){
   convo.push({role:"user", content:text});
-  convo = convo.slice(-6);
+  // filtres de sécurité sur la tablette, avant tout appel (santé, hors périmètre)
+  const f = filtrerQuestion(text);
+  if (f){ convo.push({role:"assistant", content:f}); return runActions(f); }
   setExpr("neutre"); setStateLbl("Je réfléchis…");
-  // relais du serveur OKA : modèle, limites et filtres de sécurité sont fixés côté serveur
+  // relais du serveur OKA (ou appel direct en mode test, sans serveur)
   let j;
-  try{ j = await appelServeur("ia", {system:systemPrompt(), messages:convo}); }
+  try{ j = await questionLibre(systemPrompt(), convo); }
   catch(e){ convo.pop(); throw e; }
   finally{ setStateLbl(null); }
   let raw = (j.content||[]).filter(c => c.type === "text").map(c => c.text).join(" ").trim();
