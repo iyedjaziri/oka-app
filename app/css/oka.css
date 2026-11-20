@@ -491,3 +491,4 @@ body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--be
 .qm-vol input{flex:1;accent-color:var(--c-nav);height:28px}
 #st_volMusique{accent-color:var(--c-nav);padding:6px 10px}
 .b .trace{margin-top:6px;padding-top:4px;border-top:1px dashed var(--line);font-size:calc(14px*var(--fs));color:var(--muted);font-weight:500}
+#simpleSub{cursor:pointer}

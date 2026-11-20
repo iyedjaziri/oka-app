@@ -156,8 +156,10 @@ function bubble(m, i, arr){
 }
 function renderLog(){
   const el = document.getElementById("log"); if (!el) return;
+  // si la personne remonte l'historique, on ne la ramène pas en bas à chaque nouveau message
+  const enBas = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
   el.innerHTML = log.map(bubble).join("") + (liveText ? bubble({who:"you", text:liveText, live:true}) : "");
-  el.scrollTop = el.scrollHeight;
+  if (enBas) el.scrollTop = el.scrollHeight;
 }
 document.getElementById("clearLog").onclick = () => { log = []; store.set("log", log); renderLog(); };
 

@@ -24,7 +24,11 @@ function openWin(){
 }
 function closeWin(){ winOpen = false; document.body.classList.remove("win-open", "tab-log"); render(); requestAnimationFrame(fitAll); }
 document.getElementById("sheetClose").onclick = closeWin;
-document.getElementById("btnHist").onclick = () => { wake(); if (winOpen && tab === "log") closeWin(); else showTab("log"); };
+// l'historique s'ouvre sur les derniers messages ; on remonte pour voir les précédents
+function ouvrirHistorique(){ wake(); if (winOpen && tab === "log") return closeWin(); showTab("log"); requestAnimationFrame(() => { const l = document.getElementById("log"); l.scrollTop = l.scrollHeight; }); }
+document.getElementById("btnHist").onclick = ouvrirHistorique;
+// l'encadré sous l'avatar ne montre que la dernière phrase : le toucher ouvre tout l'historique
+document.getElementById("simpleSub").onclick = ouvrirHistorique;
 
 /* ================= COULEURS DE SAISON + MODE SOMBRE ================= */
 // Palettes adoucies : fonds crème, cartes chaudes, contrastes forts pour la lecture.
