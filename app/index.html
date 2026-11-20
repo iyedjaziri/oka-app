@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FFFDF9">
+<title>OKA – avatar parlant · Diwaging</title>
+<link rel="stylesheet" href="css/oka.css">
+</head>
+<body>
+
+<header>
+  <div class="logo"><img id="logoImg" alt=""><div>OKA</div></div>
+  <span id="modeBadge" class="badge">Mode démo</span>
+  <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
+  <button class="iconbtn fsbtn" id="btnFs" title="Taille des caractères" aria-label="Changer la taille des caractères"><span class="aa">A<b>A</b></span></button>
+  <button class="iconbtn" id="btnDark" title="Mode sombre" aria-pressed="false"><span id="darkIc"></span><span id="darkTxt">Sombre</span></button>
+  <button class="iconbtn" id="btnHist" title="Historique de la conversation" data-ic="history">Historique</button>
+  <button class="iconbtn" id="btnProfile" title="Profil" data-ic="user">Profil</button>
+  <button class="iconbtn" id="btnSettings" title="Réglages" data-ic="settings">Réglages</button>
+</header>
+
+<main>
+  <nav class="tabs side" id="tabs" aria-label="Fenêtres">
+    <button data-tab="today"><span data-ic="sun"></span>Aujourd'hui</button>
+    <button data-tab="agenda"><span data-ic="calendar"></span>Agenda</button>
+    <button data-tab="proches"><span data-ic="people"></span>Proches</button>
+    <button data-tab="sorties"><span data-ic="building"></span>Sorties</button>
+    <button data-tab="chat"><span data-ic="chat"></span>Messages<span class="dot hidden" id="chatDot"></span></button>
+    <button data-tab="jeux"><span data-ic="dice"></span>Jeux</button>
+    <button data-tab="urgence" class="sos"><span data-ic="siren"></span>Urgence</button>
+  </nav>
+  <section class="center">
+    <div class="stage" id="stage">
+      <svg class="room-bg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="rbWallP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eee9dd"/><stop offset="1" stop-color="#e3ddcf"/></linearGradient>
+          <linearGradient id="rbWallE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2e9da"/><stop offset="1" stop-color="#e7dbc6"/></linearGradient>
+          <linearGradient id="rbWallA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece0cf"/><stop offset="1" stop-color="#dfcfba"/></linearGradient>
+          <linearGradient id="rbWallH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8e3dc"/><stop offset="1" stop-color="#dbd3c9"/></linearGradient>
+          <linearGradient id="rbSkyP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8dde6"/><stop offset="1" stop-color="#edf2ec"/></linearGradient>
+          <linearGradient id="rbSkyE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a3cbe0"/><stop offset="1" stop-color="#e6f0f2"/></linearGradient>
+          <linearGradient id="rbSkyA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6d0b4"/><stop offset="1" stop-color="#f1e5d4"/></linearGradient>
+          <linearGradient id="rbSkyH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c2cbd4"/><stop offset="1" stop-color="#e8ecef"/></linearGradient>
+          <linearGradient id="rbBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6e2" stop-opacity=".55"/><stop offset="1" stop-color="#fff6e2" stop-opacity="0"/></linearGradient>
+          <radialGradient id="rbGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd9a8" stop-opacity=".7"/><stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/></radialGradient>
+          <radialGradient id="rbVig" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#3e2a1c" stop-opacity="0"/><stop offset="1" stop-color="#3e2a1c" stop-opacity=".22"/></radialGradient>
+          <clipPath id="rbPane"><rect x="100" y="40" width="130" height="196"/></clipPath>
+          <filter id="rbSoft"><feGaussianBlur stdDeviation="2.2"/></filter>
+          <filter id="rbView"><feGaussianBlur stdDeviation="3.5"/></filter>
+        </defs>
+        <g filter="url(#rbSoft)">
+          <rect class="rb-wall" width="800" height="340"/>
+          <!-- soubassement en lambris -->
+          <rect y="206" width="800" height="76" fill="#ffffff" opacity=".18"/>
+          <path d="M0 206h800" stroke="#fffaf2" stroke-width="3" opacity=".7"/>
+          <path d="M300 214v62M460 214v62M620 214v62" stroke="#000" stroke-width="1.5" opacity=".05"/>
+          <!-- parquet et plinthe -->
+          <rect class="rb-floor" y="286" width="800" height="54"/>
+          <path d="M0 302h800M0 322h800" stroke="#000" stroke-width="1" opacity=".06"/>
+          <rect y="280" width="800" height="6" fill="#f4ede3"/>
+          <!-- fenêtre : la vue change avec la saison -->
+          <rect x="90" y="30" width="150" height="216" rx="2" fill="#f1eadf"/>
+          <g clip-path="url(#rbPane)"><g filter="url(#rbView)">
+            <rect class="rb-sky" x="100" y="40" width="130" height="196"/>
+            <g class="s-printemps"><rect x="100" y="190" width="130" height="46" fill="#b4c79a"/><circle cx="135" cy="150" r="42" fill="#e7c9cf"/><circle cx="205" cy="168" r="28" fill="#c3d3a6"/></g>
+            <g class="s-ete"><circle cx="205" cy="72" r="18" fill="#fff3cf"/><rect x="100" y="172" width="130" height="34" fill="#79abc2"/><rect x="100" y="206" width="130" height="30" fill="#e7d4ad"/></g>
+            <g class="s-automne"><rect x="100" y="196" width="130" height="40" fill="#c4a37a"/><circle cx="130" cy="160" r="34" fill="#cf8a4c"/><circle cx="200" cy="150" r="30" fill="#b6683e"/><circle cx="168" cy="186" r="20" fill="#dcaa62"/></g>
+            <g class="s-hiver"><rect x="100" y="192" width="130" height="44" fill="#f6f7f8"/><path d="M168 196v-72M168 150l-22-18M168 138l18-16M168 166l22-12" stroke="#7d746d" stroke-width="3" fill="none"/></g>
+          </g></g>
+          <path d="M165 40v196M100 138h130" stroke="#f1eadf" stroke-width="6"/>
+          <rect x="84" y="244" width="162" height="8" rx="2" fill="#ede4d7"/>
+          <!-- lumière du jour au sol -->
+          <path class="rb-beam" d="M100 252h130l210 88H180z" fill="url(#rbBeam)"/>
+          <!-- rideaux en lin, de la tringle jusqu'au sol -->
+          <path d="M66 18h198" stroke="#8c7460" stroke-width="4" stroke-linecap="round"/>
+          <path class="rb-curtain" d="M70 20h26c-4 70 6 160 0 266H66c8-90-4-190 4-266z"/>
+          <path class="rb-curtain" d="M234 20h26c8 76-4 176 4 266h-30c-6-106 4-196 0-266z"/>
+          <path d="M80 30v250M248 30v250" stroke="#000" stroke-width="2" opacity=".06"/>
+          <!-- tableau -->
+          <rect x="512" y="64" width="96" height="76" fill="#f6f1e9" stroke="#b39f86" stroke-width="3"/>
+          <rect class="rb-art" x="524" y="76" width="44" height="52" opacity=".55"/>
+          <rect x="574" y="96" width="22" height="32" fill="#cfc3b2" opacity=".6"/>
+          <!-- table d'appoint posée au sol, avec un vase de saison -->
+          <path d="M534 238v48M598 238v48" stroke="#7a5d47" stroke-width="4"/>
+          <rect x="526" y="232" width="80" height="6" rx="1" fill="#8a6a50"/>
+          <path d="M556 232c-4-10-3-24 4-32h12c7 8 8 22 4 32z" fill="#ddd3c6"/>
+          <g class="s-printemps"><path d="M564 200c-8-26-4-48 2-62M568 200c6-22 16-36 26-44M562 202c-12-14-22-20-32-22" stroke="#8a7462" stroke-width="1.6" fill="none"/>
+            <g fill="#e8bcc6"><circle cx="566" cy="140" r="4"/><circle cx="572" cy="152" r="3.5"/><circle cx="592" cy="158" r="4"/><circle cx="584" cy="166" r="3"/><circle cx="534" cy="181" r="3.5"/><circle cx="546" cy="186" r="3"/></g></g>
+          <g class="s-ete"><g stroke="#8aa483" stroke-width="2" fill="none"><path d="M566 200c-4-20-2-36 2-50M570 200c8-18 18-26 26-30M562 202c-10-10-18-14-28-16"/></g>
+            <g fill="#a3b896"><ellipse cx="568" cy="152" rx="3" ry="6"/><ellipse cx="574" cy="170" rx="3" ry="6"/><ellipse cx="594" cy="172" rx="6" ry="3"/><ellipse cx="540" cy="186" rx="6" ry="3"/><ellipse cx="582" cy="182" rx="5" ry="3"/></g></g>
+          <g class="s-automne"><g stroke="#c9a46a" stroke-width="1.6" fill="none"><path d="M564 200c-6-24-2-44 4-58M568 200c8-20 18-32 28-38M560 202c-12-12-22-16-32-18"/></g>
+            <g fill="#d6b47a"><ellipse cx="568" cy="142" rx="4" ry="9"/><ellipse cx="596" cy="162" rx="4" ry="9" transform="rotate(40 596 162)"/><ellipse cx="528" cy="184" rx="9" ry="4"/></g></g>
+          <g class="s-hiver"><g stroke="#5d7562" stroke-width="2.4" fill="none"><path d="M566 200c-4-22 0-40 6-52M570 200c10-16 20-24 30-28M562 202c-12-10-20-14-30-14"/></g>
+            <rect x="612" y="214" width="8" height="18" rx="1" fill="#f6f0e6"/><path d="M616 214q-3-6 0-9 3 3 0 9z" fill="#ffc46b"/><circle cx="616" cy="206" r="22" fill="url(#rbGlow)"/></g>
+          <!-- lampadaire posé au sol -->
+          <circle class="rb-glow" cx="672" cy="100" r="130" fill="url(#rbGlow)"/>
+          <ellipse cx="672" cy="284" rx="16" ry="3.5" fill="#5e4a3c"/>
+          <path d="M672 284V106" stroke="#5e4a3c" stroke-width="3"/>
+          <path d="M650 106h44l-8-36h-28z" fill="#efe2cf"/>
+          <!-- fauteuil (en partie hors cadre) -->
+          <path class="rb-chair" d="M708 170q0-14 14-14h96v110h-110z"/>
+          <path class="rb-chair" d="M700 230q0-10 10-10h110v46H700z" opacity=".95"/>
+          <path d="M712 266v20M800 266v20" stroke="#5e4a3c" stroke-width="4"/>
+          <path class="rb-throw" d="M726 156h40l-4 110h-32z" opacity=".85"/>
+          <!-- tapis -->
+          <path class="rb-rug" d="M250 292h300l60 34H190z"/>
+          <!-- lumières douces (hiver) -->
+          <g class="s-hiver" fill="#ffd8a0" opacity=".7"><circle cx="110" cy="24" r="4"/><circle cx="140" cy="28" r="4"/><circle cx="170" cy="30" r="4"/><circle cx="200" cy="28" r="4"/><circle cx="228" cy="24" r="4"/></g>
+        </g>
+        <rect width="800" height="340" fill="url(#rbVig)"/>
+      </svg>
+      <canvas id="face" width="720" height="800" aria-label="OKA, panda roux"></canvas>
+      <div class="expr" id="exprLbl">neutre</div>
+      <div class="state hidden" id="stateLbl">Je parle…</div>
+      <div class="zzz hidden" id="zzz">z Z</div>
+    </div>
+    <div class="simplesub" id="simpleSub" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+  </section>
+  <section class="win" id="win">
+    <div class="sheethead"><div><div class="st" id="sheetTitle"></div><div class="ss" id="sheetSub"></div></div><button class="btn" id="sheetClose" data-ic="x">Fermer</button></div>
+    <div class="logwrap">
+      <div class="loghead"><span>Conversation</span><button class="linkbtn" id="clearLog">Effacer l'historique</button></div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+    <div class="panel" id="panel"></div>
+  </section>
+</main>
+<div class="controls">
+      <button class="mic" id="mic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a4 4 0 0 0 4-4V5a4 4 0 1 0-8 0v6a4 4 0 0 0 4 4zm7-4a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V21H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-3.08A7 7 0 0 0 19 11z"/></svg><span id="micTxt">Parler</span></button>
+      <form class="typebox" id="typeForm"><span class="pen" data-ic="pencil"></span><input id="typeIn" placeholder="Écrire…" aria-label="Écrire un message" autocomplete="off"><button>Envoyer</button></form>
+    </div>
+
+
+<!-- Profil de départ -->
+<div class="modal hidden" id="profileModal">
+  <div class="box">
+    <h2>Profil de départ</h2>
+    <p class="muted small">Ces informations restent dans ce navigateur. Elles servent à OKA pour la mise en relation, l'urgence, le CCAS et la météo.</p>
+    <div class="grid2">
+      <div><label>Prénom</label><input class="f" id="pf_prenom"></div>
+      <div><label>Nom</label><input class="f" id="pf_nom"></div>
+      <div><label>Âge</label><input class="f" id="pf_age" type="number" min="50" max="120"></div>
+      <div><label>Vit seule ?</label><select class="f" id="pf_seule"><option value="oui">Oui</option><option value="non">Non</option></select></div>
+      <div><label>Ville</label><input class="f" id="pf_ville"></div>
+      <div><label>Pays</label><select class="f" id="pf_pays"></select></div>
+    </div>
+    <label>Proches, soignants et aidants</label>
+    <p class="muted small" style="margin:0 0 6px">Cochez « urgence » pour les personnes à appeler en premier, dans l'ordre de la liste.</p>
+    <div class="plist" id="pf_people"></div>
+    <button class="btn sm alt" id="pf_add">+ Ajouter une personne</button>
+    <div class="grid2" style="margin-top:8px">
+      <div><label>Centres d'intérêt</label><input class="f" id="pf_gouts" placeholder="ex. marché, chant, belote"></div>
+      <div><label>Souvenir à évoquer</label><input class="f" id="pf_souv" placeholder="ex. son métier de couturière"></div>
+    </div>
+    <div class="row" style="margin-top:18px;justify-content:space-between">
+      <button class="btn ghost" id="pf_demo">Remplir avec l'exemple de Giselle</button>
+      <div class="row"><button class="btn alt" id="pf_cancel">Annuler</button><button class="btn" id="pf_save">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Réglages -->
+<div class="modal hidden" id="settingsModal">
+  <div class="box">
+    <h2>Réglages</h2>
+    <h3>Cerveau</h3>
+    <label>Mode</label>
+    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (clé API Claude)</option></select>
+    <div class="grid2">
+      <div><label>Clé API Claude</label><input class="f" id="st_key" type="password" placeholder="sk-ant-…"></div>
+      <div><label>Modèle</label><input class="f" id="st_model"></div>
+    </div>
+    <h3>Voix</h3>
+    <div class="grid2">
+      <div><label>Voix du navigateur</label><select class="f" id="st_voice"></select></div>
+      <div><label>Vitesse (<span id="st_rateV"></span>)</label><input class="f" id="st_rate" type="range" min="0.6" max="1.2" step="0.05"></div>
+      <div><label>ElevenLabs – clé API (optionnel)</label><input class="f" id="st_elkey" type="password"></div>
+      <div><label>ElevenLabs – ID de la voix clonée</label><input class="f" id="st_elvoice"></div>
+    </div>
+    <h3>Affichage et accessibilité</h3>
+    <div class="grid2">
+      <div><label>Couleurs de saison</label><select class="f" id="st_theme"><option value="auto">Selon la saison du jour</option><option value="printemps">Printemps (frais et lumineux)</option><option value="ete">Été (solaire et chaleureux)</option><option value="automne">Automne (rassurant et boisé)</option><option value="hiver">Hiver (apaisant et cocon)</option></select></div>
+      <div><label>Mode sombre</label><select class="f" id="st_dark"><option value="0">Non (clair)</option><option value="1">Oui (sombre)</option></select></div>
+      <div><label>Taille des caractères</label><select class="f" id="st_fs"><option value="petit">Petits caractères</option><option value="moyen">Caractères moyens</option><option value="grand">Grands caractères</option></select></div>
+    </div>
+    <h3>Démonstration</h3>
+    <div class="grid2">
+      <div><label>Scénario météo</label><select class="f" id="st_wx"><option value="reel">Météo réelle (open-meteo)</option><option value="canicule">Forcer : canicule</option><option value="froid">Forcer : nuit froide</option><option value="medit">Forcer : épisode méditerranéen</option></select></div>
+      <div><label>Réponses simulées dans le chat</label><select class="f" id="st_sim"><option value="1">Oui (démo)</option><option value="0">Non</option></select></div>
+    </div>
+    <label>Les 8 émotions d'OKA (touchez pour la voir parler)</label>
+    <div class="row" id="st_emos"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost sm" id="st_reset">Tout réinitialiser</button>
+    </div>
+    <div class="row" style="margin-top:18px;justify-content:flex-end"><button class="btn alt" id="st_cancel">Fermer</button><button class="btn" id="st_save">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Double rendez-vous -->
+<div class="modal hidden" id="confModal">
+  <div class="box" style="max-width:640px">
+    <h2>Deux rendez-vous en même temps</h2>
+    <p class="big" style="font-size:calc(22px*var(--fs));font-weight:600;display:block" id="cf_msg"></p>
+    <div class="row" id="cf_acts"></div>
+  </div>
+</div>
+
+<!-- Alerte urgence -->
+<div class="alert hidden" id="alertBox">
+  <div class="box">
+    <h2 id="al_title">Alerte en cours</h2>
+    <div class="big" id="al_msg"></div>
+    <div class="steps" id="al_steps"></div>
+    <div id="al_actions" class="row" style="justify-content:center"></div>
+    <div class="row" style="justify-content:center;margin-top:16px"><button class="btn ghost" id="al_cancel">Tout va bien, annuler</button></div>
+  </div>
+</div>
+
+<canvas id="seasonFx" aria-hidden="true"></canvas>
+<button class="seasonbtn" id="seasonBtn" type="button">🍂</button>
+<div class="toast hidden" id="toast"></div>
+
+<script src="js/01-pictogrammes.js"></script>
+<script src="js/02-images.js"></script>
+<script src="js/03-donnees.js"></script>
+<script src="js/04-avatar.js"></script>
+<script src="js/05-voix-ecoute.js"></script>
+<script src="js/06-cerveau.js"></script>
+<script src="js/07-agenda-meteo.js"></script>
+<script src="js/08-liens-urgence.js"></script>
+<script src="js/09-interface.js"></script>
+<script src="js/10-profil-reglages.js"></script>
+<script src="js/11-jeux.js"></script>
+<script src="js/12-demarrage.js"></script>
+</body>
+</html>
