@@ -56,6 +56,38 @@ md += "\n</details>\n";
 // le prompt du classifieur, tel qu'il est envoyé
 globalThis.ARBRE = arbre;
 const promptClassifieur = new Function(moteur + "\nreturn promptClassifieur;")();
+
+/* ---- schéma de l'arbre avec les 20 scénarios officiels, placés par le vrai parcours ---- */
+const { parcourirArbre } = new Function(moteur + "\nreturn {parcourirArbre};")();
+const scenarios = JSON.parse(lire("arbre/scenarios.json")).scenarios.filter(x => x.groupe !== "complement");
+const place = {};
+for (const x of scenarios){ const d = parcourirArbre(x.phrase); (place[d.type === "inconnu" ? "inconnu" : d.id] ||= []).push(x); }
+const lab = t => String(t).replace(/"/g, "#quot;");
+const cas = ids => ids.flatMap(i => place[i] || []).map(x => "<br/>" + x.id + " · " + lab(x.phrase.length > 46 ? x.phrase.slice(0, 44) + "…" : x.phrase)).join("");
+let mm = "flowchart TD\n  P([\"Phrase dite ou écrite\"]) --> B0\n";
+src.barrieres.forEach((b, k) => {
+  const ids = b.sous ? b.sous.map(x => x.id) : [b.id];
+  const q = b.sous ? b.nom + " ?<br/>" + b.sous.map(x => x.nom).join(", ") : b.nom + " ?";
+  const action = {alerte:"Alerte : proches puis secours", orienter_humain:"Orientation vers un humain (3114)", masquer_et_avertir:"Message effacé, avertissement",
+    conseil:"Conseil anti-arnaque + appel d'un proche", refuser_orienter:b.id === "medical" ? "Aucun avis médical, proposer le médecin" : "Refus poli + orientation"}[b.action];
+  mm += `  B${k}{"${lab(q)}"} -- oui --> F${k}["<b>${lab(action)}</b>${cas(ids)}"]:::secu\n`;
+  mm += `  B${k} -- non --> ${k + 1 < src.barrieres.length ? "B" + (k + 1) : "I"}\n`;
+});
+mm += `  I{"Intention reconnue par l'arbre ?"}\n`;
+const locales = src.intentions.filter(x => x.traitement === "local"), ias = src.intentions.filter(x => x.traitement === "ia");
+for (const x of locales.filter(x => place[x.id])) mm += `  I -- locale --> L_${x.id}["<b>${lab(x.nom)}</b> · sans IA${cas([x.id])}"]:::local\n`;
+const autres = locales.filter(x => !place[x.id]).map(x => x.nom).join(", ");
+if (autres) mm += `  I -- locale --> L_autres["<b>Autres fonctions locales</b><br/>${lab(autres)}"]:::local\n`;
+mm += `  I -- question libre --> Q["<b>${lab(ias.map(x => x.nom).join(" · "))}</b>${cas(ias.map(x => x.id))}"]:::ia\n`;
+mm += `  I -- rien de reconnu --> N["<b>Non reconnu</b>${cas(["inconnu"])}"]:::ia\n`;
+mm += `  Q --> C{"Classifieur IA<br/>Haiku ou petit modèle local<br/>(si conversation libre activée)"}\n  N --> C\n`;
+mm += `  C -- catégorie de sécurité --> CS["Réponse fixe de la barrière"]:::secu\n  C -- fonction locale --> CL["Fonction locale${(place.inconnu || []).map(x => "<br/>" + x.id + " → " + lab((src.intentions.find(i => i.id === x.attendu) || {nom:x.attendu}).nom)).join("")}"]:::local\n`;
+mm += `  C -- question libre --> G["Réponse du modèle"]:::ia\n  G --> V{"Vérification de la réponse<br/>dose, diagnostic, code, vote, lien exclusif"}\n`;
+mm += `  V -- problème --> VR["Réponse remplacée par celle de l'arbre"]:::secu\n  V -- ok --> S(["OKA parle ; appel, inscription, agenda seulement après « oui »"])\n`;
+mm += `  classDef secu fill:#fde7e4,stroke:#c92a1d,color:#3a120d\n  classDef local fill:#e6f2e1,stroke:#4f7a3a,color:#1f3317\n  classDef ia fill:#e3ecf7,stroke:#3d6296,color:#14243a\n`;
+ecrire("docs/arbre-schema.mmd", mm);
+md = "### Diagram – the tree and where each of the 20 official scenarios lands\n\nGenerated from `arbre/arbre.json` and `arbre/scenarios.json` by walking the real tree (also in `docs/arbre-schema.mmd`, " +
+  "to paste into mermaid.live for a PNG/SVG). Red: safety · green: local, no AI · blue: AI, through the classifier and the output check.\n\n```mermaid\n" + mm + "```\n\n" + md;
 md += "\n<details><summary>Classifier prompt (generated from the tree)</summary>\n\n```text\n" + promptClassifieur() + "\n```\n\n</details>\n";
 
 const doc = lire("docs/07-arbre-decisionnel.md");
