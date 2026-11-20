@@ -6,7 +6,7 @@ const COQUILLE = [
   "./", "index.html", "config.js", "manifest.webmanifest", "css/oka.css",
   "js/00-arbre.js", "js/01-pictogrammes.js", "js/02-images.js", "js/03-donnees.js", "js/04-avatar.js", "js/05-voix-ecoute.js",
   "js/06-cerveau.js", "js/07-agenda-meteo.js", "js/08-liens-urgence.js", "js/09-interface.js",
-  "js/10-profil-reglages.js", "js/11-jeux.js", "js/12-compte.js", "js/13-sorties-ville.js", "js/14-ambiance.js", "js/15-decision.js", "js/16-demarrage.js",
+  "js/10-profil-reglages.js", "js/11-jeux.js", "js/12-compte.js", "js/13-sorties-ville.js", "js/14-ambiance.js", "js/15-decision.js", "js/16-station.js", "js/17-demarrage.js",
   "img/logo.webp", "img/neutre.webp", "img/tendre.webp", "img/joie.webp", "img/gourmand.webp", "img/accueil.webp",
   "img/pensive.webp", "img/bravo.webp", "img/inquiete.webp", "img/rire.webp",
   "icons/oka-180.png", "icons/oka-192.png", "icons/oka-512.png"

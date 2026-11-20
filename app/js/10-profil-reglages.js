@@ -45,7 +45,8 @@ document.getElementById("btnProfile").onclick = openProfile;
 /* ================= RÉGLAGES ================= */
 const SM = document.getElementById("settingsModal");
 document.getElementById("btnSettings").onclick = () => {
-  for (const k of ["mode","rate","elkey","elvoice","wx","sim","fs","theme","dark","trace"]) document.getElementById("st_"+k).value = settings[k];
+  majStation();
+  for (const k of ["mode","rate","elkey","elvoice","wx","sim","fs","theme","dark","trace","moteurVoix","voixLocale","moteurIA","station"]) document.getElementById("st_"+k).value = settings[k] ?? "";
   document.getElementById("st_compte").textContent = compteTexte();
   document.getElementById("st_adresse").value = settings.adresse || ""; document.getElementById("st_adresseInfo").textContent = infoAdresse();
   document.getElementById("st_testWrap").classList.toggle("hidden", !modeTest()); document.getElementById("st_cleTest").value = settings.cleTest || "";
@@ -58,7 +59,9 @@ document.getElementById("st_rate").oninput = e => document.getElementById("st_ra
 document.getElementById("st_cancel").onclick = () => SM.classList.add("hidden");
 document.getElementById("st_save").onclick = () => {
   const old = settings.wx;
-  for (const k of ["mode","elkey","elvoice","wx","sim","voice","fs","theme","dark","trace"]) settings[k] = document.getElementById("st_"+k).value.trim();
+  const stationAvant = settings.station;
+  for (const k of ["mode","elkey","elvoice","wx","sim","voice","fs","theme","dark","trace","moteurVoix","voixLocale","moteurIA","station"]) settings[k] = document.getElementById("st_"+k).value.trim();
+  verifierStation(settings.station !== stationAvant);
   const adr = document.getElementById("st_adresse").value.trim();
   if (adr !== (settings.adresse || "")){ settings.adresse = adr; localiserAdresse(adr); }
   if (modeTest()) settings.cleTest = document.getElementById("st_cleTest").value.trim();

@@ -52,10 +52,12 @@ function say(text, expr, done, opts){
   // petit délai minimum : Chrome perd parfois la première phrase si on parle juste après cancel()
   setTimeout(() => { if (token !== speakToken) return; setImg(pose.talk); nextSentence(token); }, Math.max(delay, 250));
 }
-function nextSentence(token){
+// sansLocale : la voix IA locale vient d'échouer pour cette phrase
+function nextSentence(token, sansLocale){
   if (token !== speakToken) return;
   const s = speakQueue.shift();
   if (!s){ finishSpeaking(); return; }
+  if (!sansLocale && settings.moteurVoix === "locale" && voixLocaleDispo()) return speakLocale(s, token);
   if (settings.elkey && settings.elvoice) return speakEleven(s, token);
   if (!synth){ // pas de synthèse : animation seule
     lipStart(s, 1); setTimeout(() => { lipStop(); setTimeout(() => nextSentence(token), 250); }, s.length/13*1000); return;
@@ -84,6 +86,21 @@ function nextSentence(token){
   synth.speak(u);
 }
 let elAudio = null, actx = null;
+// lit un fichier audio de voix (IA locale, ElevenLabs) : les lèvres suivent le volume réel
+async function jouerAudio(blob, s, token, vitesse){
+  const url = URL.createObjectURL(blob);
+  elAudio = new Audio(url); elAudio.playbackRate = vitesse || 1; elAudio.preservesPitch = true;
+  actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  const srcN = actx.createMediaElementSource(elAudio), an = actx.createAnalyser(); an.fftSize = 512;
+  srcN.connect(an); an.connect(actx.destination);
+  const buf = new Uint8Array(an.fftSize);
+  lipStart(s, 1);
+  const tick = () => { if (!lip.active) return; an.getByteTimeDomainData(buf); let sum = 0; for (const x of buf){ const v = (x-128)/128; sum += v*v; } lip.vol = Math.sqrt(sum/buf.length); requestAnimationFrame(tick); };
+  elAudio.onplay = tick;
+  elAudio.onended = () => { URL.revokeObjectURL(url); lipStop(); setTimeout(() => nextSentence(token), 200); };
+  await elAudio.play();
+}
 async function speakEleven(s, token){
   try{
     const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(settings.elvoice)}`, {
@@ -91,18 +108,9 @@ async function speakEleven(s, token){
       body:JSON.stringify({text:s, model_id:"eleven_multilingual_v2", voice_settings:{stability:.6, similarity_boost:.8}})
     });
     if (!r.ok) throw new Error("ElevenLabs "+r.status);
-    const url = URL.createObjectURL(await r.blob());
+    const blob = await r.blob();
     if (token !== speakToken) return;
-    elAudio = new Audio(url);
-    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const srcN = actx.createMediaElementSource(elAudio), an = actx.createAnalyser(); an.fftSize = 512;
-    srcN.connect(an); an.connect(actx.destination);
-    const buf = new Uint8Array(an.fftSize);
-    lipStart(s, 1);
-    const tick = () => { if (!lip.active) return; an.getByteTimeDomainData(buf); let sum = 0; for (const x of buf){ const v = (x-128)/128; sum += v*v; } lip.vol = Math.sqrt(sum/buf.length); requestAnimationFrame(tick); };
-    elAudio.onplay = tick;
-    elAudio.onended = () => { lipStop(); setTimeout(() => nextSentence(token), 200); };
-    await elAudio.play();
+    await jouerAudio(blob, s, token, 1);
   }catch(e){
     console.warn(e); toast("Voix ElevenLabs indisponible, retour à la voix du navigateur.");
     settings.elkey = ""; speakQueue.unshift(s); nextSentence(token);

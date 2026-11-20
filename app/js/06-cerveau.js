@@ -9,7 +9,7 @@ async function handleUser(text){
   // Arbre de décision (00-arbre.js) : barrières de sécurité dans l'ordre, puis périmètre, quel que soit le mode
   const d = parcourirArbre(text);
   if (d.id === "donnees_sensibles"){ addLog("you", MESSAGE_MASQUE, d.chemin); return appliquerBarriere(d); } // rien n'est gardé ni envoyé
-  addLog("you", text, d.chemin);
+  addLog("you", text, d.chemin); compter("demandes");
   const n = norm(text);
   if (d.type === "barriere") return appliquerBarriere(d, text);
   if (pending && pending.type === "niveau"){

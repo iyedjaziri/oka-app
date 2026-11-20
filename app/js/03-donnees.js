@@ -80,7 +80,7 @@ let profile = store.get("profile", null);
 let agenda = (store.get("agenda", null) || demoAgenda()).filter(e => !/\(test\)/i.test(e.titre));
 let activities = store.get("activities", null) || demoActivities();
 let rooms = store.get("rooms", null);
-let settings = Object.assign({mode:"demo", voice:"", rate:0.85, elkey:"", elvoice:"", wx:"reel", sim:"1", trace:"", fs:"moyen", theme:"automne", dark:"0"}, store.get("settings", {}));
+let settings = Object.assign({mode:"demo", voice:"", rate:0.85, elkey:"", elvoice:"", wx:"reel", sim:"1", trace:"", moteurVoix:"navigateur", voixLocale:"", moteurIA:"claude", station:"", fs:"moyen", theme:"automne", dark:"0"}, store.get("settings", {}));
 let reminded = store.get("reminded", {});
 let weather = null, geo = null;
 let unread = store.get("unread", {});

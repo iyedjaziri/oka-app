@@ -185,11 +185,13 @@
     <h2>Réglages</h2>
     <h3>Cerveau</h3>
     <label>Mode</label>
-    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (questions à Claude)</option></select>
+    <select class="f" id="st_mode"><option value="demo">Démo (sans internet, réponses préparées)</option><option value="claude">Conversation libre (questions à l'IA)</option></select>
     <div class="row" style="margin-top:8px;justify-content:space-between"><span class="muted small" id="st_compte"></span><button class="btn ghost sm" id="st_activer">Activer la tablette</button></div>
     <div id="st_testWrap" class="hidden" style="margin-top:8px"><label for="st_cleTest">Clé API Claude – mode test</label><input class="f" id="st_cleTest" type="password" placeholder="sk-ant-…" autocomplete="off"><p class="muted small" style="margin:4px 0 0">Fichier de démo uniquement. La clé reste dans ce navigateur : ne jamais utiliser ce fichier sur une tablette distribuée.</p></div>
     <h3>Voix</h3>
     <div class="grid2">
+      <div><label for="st_moteurVoix">Moteur de voix</label><select class="f" id="st_moteurVoix"><option value="navigateur">Voix du navigateur</option><option value="locale">Voix IA locale (station OKA)</option></select></div>
+      <div><label for="st_voixLocale">Voix IA</label><div class="row" style="flex-wrap:nowrap"><select class="f" id="st_voixLocale"></select><button class="btn sm alt" id="st_voixTest" type="button">Tester</button></div></div>
       <div><label>Voix du navigateur</label><select class="f" id="st_voice"></select></div>
       <div><label>Vitesse (<span id="st_rateV"></span>)</label><input class="f" id="st_rate" type="range" min="0.6" max="1.2" step="0.05"></div>
       <div><label>ElevenLabs – clé API (optionnel)</label><input class="f" id="st_elkey" type="password"></div>
@@ -201,6 +203,13 @@
       <div><label>Mode sombre</label><select class="f" id="st_dark"><option value="0">Non (clair)</option><option value="1">Oui (sombre)</option></select></div>
       <div><label>Taille des caractères</label><select class="f" id="st_fs"><option value="petit">Petits caractères</option><option value="moyen">Caractères moyens</option><option value="grand">Grands caractères</option></select></div>
     </div>
+    <h3>Station locale et sobriété</h3>
+    <div class="grid2">
+      <div><label for="st_moteurIA">Modèle pour les questions libres</label><select class="f" id="st_moteurIA"><option value="claude">Claude Haiku 5.5 (en ligne)</option><option value="local">Petit modèle local (station OKA)</option></select></div>
+      <div><label for="st_station">Adresse de la station</label><div class="row" style="flex-wrap:nowrap"><input class="f" id="st_station" placeholder="http://localhost:8787"><button class="btn sm alt" id="st_stationVerif" type="button">Vérifier</button></div></div>
+    </div>
+    <div class="card small" id="st_stationEtat" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:6px"><button class="btn ghost sm" id="st_sobrieteRaz" type="button">Remettre les compteurs à zéro</button></div>
     <h3>Musique calme</h3>
     <div class="grid2">
       <div><label for="st_volMusique">Volume de la musique</label><input class="f" id="st_volMusique" type="range" min="0" max="100" step="5"></div>
@@ -279,6 +288,7 @@
 <script src="js/13-sorties-ville.js"></script>
 <script src="js/14-ambiance.js"></script>
 <script src="js/15-decision.js"></script>
-<script src="js/16-demarrage.js"></script>
+<script src="js/16-station.js"></script>
+<script src="js/17-demarrage.js"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@ if (settings.key || settings.model){ delete settings.key; delete settings.model;
 
 // la clé de test n'est jamais gardée ailleurs que dans le fichier de démo
 if (!modeTest() && settings.cleTest){ delete settings.cleTest; store.set("settings", settings); }
-const iaDisponible = () => serveurOk() ? !!(appareil && appareil.ia) : modeTest() && !!settings.cleTest;
+const iaDisponible = () => !!moteurIA(); // 16-station.js : petit modèle local ou Claude
 const modeLibre = () => settings.mode === "claude" && iaDisponible();
 
 async function appelServeur(fn, body){
@@ -44,6 +44,14 @@ async function appelClaudeDirect(body){
   return j;
 }
 async function questionLibre(system, messages){
+  if (moteurIA() === "local"){
+    // petit modèle sur la station : même parcours de l'arbre, consommation mesurée par la station
+    compter("iaLocale"); const wh0 = sobriete.wh;
+    const r = await repondreAvecArbre({system, messages, appeler:appelStationIA});
+    const chemin = r.chemin.concat("Modèle local · ≈ " + mwh(sobriete.wh - wh0));
+    return r.route ? {route:r.route, chemin} : {content:[{type:"text", text:r.texte}], stop_reason:r.stop, chemin};
+  }
+  compter("claude");
   if (serveurOk()) return appelServeur("ia", {system, messages});
   if (!modeTest()) throw new Error("aucun serveur configuré");
   // mode test : même parcours que le serveur (arbre : classifieur, réponse, vérification), appels directs à Claude Haiku 5.5

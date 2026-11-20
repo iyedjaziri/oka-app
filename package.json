@@ -10,6 +10,8 @@
     "build:single": "node tools/build-single.mjs",
     "arbre": "node tools/arbre.mjs",
     "test:arbre": "node tools/test-arbre.mjs",
+    "test:arbre:local": "node tools/test-arbre.mjs --local",
+    "station": "node tools/station.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",

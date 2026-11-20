@@ -11,3 +11,6 @@ supabase/functions/.env
 
 # morceaux sources déposés à la racine (les versions utilisées sont dans app/audio/)
 /*.mp3
+
+# serveurs locaux (voix, modèle) : environnements Python
+.venv-voix/

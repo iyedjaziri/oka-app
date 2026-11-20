@@ -3,14 +3,19 @@
 // Met à jour docs/07-arbre-decisionnel.md (repères <!-- debut:resultats -->) et le tableau de docs/04-scenarios-test.md.
 //   npm run test:arbre               tests locaux, sans réseau
 //   npm run test:arbre -- --ia       + classifieur, réponse et vérification avec Claude (ANTHROPIC_API_KEY)
+//   npm run test:arbre -- --local    + le même parcours avec un petit modèle local (Ollama), consommation estimée
 import fs from "fs";
+import { mesurer, WATTS_CPU, CPUS } from "./energie.mjs";
 import { ARBRE, parcourirArbre, verifierReponse, repondreAvecArbre } from "../supabase/functions/_shared/arbre.js";
 import { filtrer as filtrerV1 } from "../arbre/v1-filtres.js";
 
 const lire = f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
 const ecrire = (f, t) => fs.writeFileSync(new URL("../" + f, import.meta.url), t);
 const { scenarios, reponses } = JSON.parse(lire("arbre/scenarios.json"));
-const avecIA = process.argv.includes("--ia");
+const avecLocal = process.argv.includes("--local"), avecIA = avecLocal || process.argv.includes("--ia");
+const MODELE_LOCAL = process.env.OKA_MODELE_LOCAL || "qwen2.5:1.5b", OLLAMA = process.env.OLLAMA_URL || "http://localhost:11434";
+const NOM_IA = avecLocal ? MODELE_LOCAL + " (local)" : "Claude Haiku 5.5";
+const conso = {appels:0, duree:0, cpu:0, wh:0};
 
 // famille d'un nœud : la barrière parente pour les sous-catégories du hors périmètre
 const famille = id => { for (const b of ARBRE.barrieres) if (b.id === id || (b.sous || []).some(s => s.id === id)) return b.id; return id; };
@@ -33,9 +38,22 @@ function apres(s){
   return ["❌", "« " + d.id + " » au lieu de « " + s.attendu + " »", d];
 }
 
-/* ---- parcours complet avec Claude (option) ---- */
+/* ---- parcours complet avec Claude ou un modèle local (option) ---- */
 let appeler = null;
-if (avecIA){
+if (avecLocal){
+  // API compatible OpenAI d'Ollama ; temps processeur d'Ollama mesuré à chaque appel
+  appeler = async ({system, messages, max_tokens}) => {
+    const { resultat:j, mesure } = await mesurer("ollama", async () => {
+      const r = await fetch(OLLAMA + "/v1/chat/completions", {method:"POST", headers:{"content-type":"application/json"},
+        body:JSON.stringify({model:MODELE_LOCAL, max_tokens:max_tokens || 300, temperature:0.2, messages:[{role:"system", content:system}, ...messages]})});
+      if (!r.ok) throw new Error("Ollama " + r.status);
+      return r.json();
+    });
+    conso.appels++; conso.duree += mesure.duree; conso.cpu += mesure.cpu; conso.wh += mesure.wh;
+    const c = j.choices[0];
+    return {texte:String(c.message.content || "").trim(), stop:c.finish_reason === "length" ? "max_tokens" : "end_turn"};
+  };
+} else if (avecIA){
   if (!process.env.ANTHROPIC_API_KEY){ console.error("--ia demande ANTHROPIC_API_KEY"); process.exit(1); }
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic();
@@ -72,14 +90,18 @@ verifs.forEach(v => console.log(`${v.r.id.padEnd(4)} vérification ${v.ok ? "✅
 const cell = t => String(t ?? "").replace(/\|/g, "\\|");
 const GROUPES = {normal:"Normal", limite:"Limit", piege:"Trap", complement:"Complement"};
 let md = `Run on ${new Date().toISOString().slice(0, 10)} – tree ${ARBRE.version}.\n\n` +
-  `| | Before (keyword filters) | After (decision tree, local) |${avecIA ? " After (full pipeline with Claude) |" : ""}\n|---|---|---|${avecIA ? "---|" : ""}\n` +
+  `| | Before (keyword filters) | After (decision tree, local) |${avecIA ? ` After (full pipeline with ${NOM_IA}) |` : ""}\n|---|---|---|${avecIA ? "---|" : ""}\n` +
   `| Correct | ${bilan.avant.ok} / ${bilan.avant.n} | ${bilan.apres.ok} / ${bilan.apres.n}${bilan.apres.ia ? ` (+ ${bilan.apres.ia} sent to the AI classifier)` : ""} |${avecIA ? ` ${bilan.complet.ok} / ${bilan.complet.n} |` : ""}\n\n` +
   `✅ handled as expected · ⚠️ caught, but by the wrong rule · ➡️ no local rule, decided by the AI classifier · ❌ wrong\n\n` +
   `| # | Group | Phrase | Expected node | Before | After (local) |${avecIA ? " Full pipeline |" : ""}\n|---|---|---|---|---|---|${avecIA ? "---|" : ""}\n`;
 for (const l of lignes) md += `| ${l.s.id} | ${GROUPES[l.s.groupe]} | ${cell(l.s.phrase)} | \`${l.s.attendu}\` | ${l.va} ${cell(l.ta)} | ${l.vp} ${cell(l.tp)} |${avecIA ? ` ${l.vc} ${cell(l.tc)}<br>« ${cell(l.rep)} » |` : ""}\n`;
 md += `\n**Output check** (model answers given as examples): ${verifs.filter(v => v.ok).length} / ${verifs.length}\n\n| # | Model answer | Expected | Result |\n|---|---|---|---|\n`;
 for (const v of verifs) md += `| ${v.r.id} | ${cell(v.r.texte)} | \`${v.r.attendu}\` | ${v.ok ? "✅" : "❌"} \`${v.obtenu}\` |\n`;
-if (!avecIA) md += `\nFull pipeline with Claude not run in this report (\`npm run test:arbre -- --ia\` with \`ANTHROPIC_API_KEY\`).\n`;
+if (!avecIA) md += `\nFull pipeline with a model not run in this report (\`npm run test:arbre -- --local\` with Ollama, or \`-- --ia\` with \`ANTHROPIC_API_KEY\`).\n`;
+if (avecLocal) md += `\n**Measured on this machine** (${CPUS} logical CPUs, ${WATTS_CPU} W processor): ${conso.appels} model calls, ` +
+  `${conso.duree.toFixed(1)} s total (${(conso.duree / Math.max(1, conso.appels)).toFixed(1)} s per call), ${conso.cpu.toFixed(1)} CPU-seconds, ` +
+  `≈ ${(conso.wh * 1000).toFixed(1)} mWh estimated (≈ ${(conso.wh * 1000 / Math.max(1, conso.appels)).toFixed(2)} mWh per call). ` +
+  `Estimate = processor power × CPU time ÷ logical CPUs (tools/energie.mjs); marginal energy only.\n`;
 
 const remplacer = (f, a, b, contenu) => { const d = lire(f); if (!d.includes(a)) return console.warn("repères absents :", f); ecrire(f, d.slice(0, d.indexOf(a) + a.length) + "\n" + contenu + d.slice(d.indexOf(b))); };
 remplacer("docs/07-arbre-decisionnel.md", "<!-- debut:resultats -->", "<!-- fin:resultats -->", md);
@@ -90,5 +112,6 @@ for (const g of ["normal", "limite", "piege"]){
 }
 remplacer("docs/04-scenarios-test.md", "<!-- debut:scenarios -->", "<!-- fin:scenarios -->", sc);
 const echecs = lignes.filter(l => l.vp === "❌" || l.vc === "❌").length + verifs.filter(v => !v.ok).length;
+if (avecLocal) console.log(`\n${MODELE_LOCAL} : ${conso.appels} appels, ${conso.duree.toFixed(1)} s, ${conso.cpu.toFixed(1)} s CPU, ≈ ${(conso.wh * 1000).toFixed(1)} mWh`);
 console.log(`\navant ${bilan.avant.ok}/${bilan.avant.n} · après ${bilan.apres.ok}/${bilan.apres.n} (+${bilan.apres.ia} à l'IA)${avecIA ? ` · complet ${bilan.complet.ok}/${bilan.complet.n}` : ""} · vérification ${verifs.filter(v => v.ok).length}/${verifs.length}`);
 process.exit(echecs ? 1 : 0);
