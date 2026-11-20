@@ -91,14 +91,17 @@ async function jouerClip(url, s, token){
 }
 
 /* ---- voix IA locale : chaque phrase est préparée par la station, la suivante pendant que celle-ci est dite ---- */
+// audio déjà préparé, par voix et par phrase (changer de voix ne rejoue pas l'ancienne)
 const voixPretes = new Map();
+const cleVoix = s => (settings.voixLocale || "estelle") + "|" + s;
 function audioLocal(s){
-  if (!voixPretes.has(s)){
-    voixPretes.set(s, fetch(stationUrl() + "/voix/tts", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({texte:s, voix:settings.voixLocale || ""})})
+  const k = cleVoix(s);
+  if (!voixPretes.has(k)){
+    voixPretes.set(k, fetch(stationUrl() + "/voix/tts", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({texte:s, voix:settings.voixLocale || ""})})
       .then(async r => { if (!r.ok) throw new Error("voix " + r.status); noterConso(JSON.parse(r.headers.get("x-oka-mesure") || "null"), true); return r.blob(); }));
     if (voixPretes.size > 40) voixPretes.delete(voixPretes.keys().next().value);
   }
-  return voixPretes.get(s);
+  return voixPretes.get(k);
 }
 async function speakLocale(s, token){
   try{
@@ -108,7 +111,7 @@ async function speakLocale(s, token){
     if (token !== speakToken) return;
     await jouerAudio(blob, s, token, Math.min(1.2, Math.max(.8, settings.rate / .85)));
   }catch(e){
-    voixPretes.delete(s); console.warn("voix locale", e);
+    voixPretes.delete(cleVoix(s)); console.warn("voix locale", e);
     // son bloqué avant le premier geste : cette phrase seulement avec la voix du navigateur
     if (e.name !== "NotAllowedError"){ station.voix = {en_ligne:false, voix:[]}; toast("Voix IA locale indisponible : voix du navigateur."); }
     speakQueue.unshift(s); nextSentence(token, true);

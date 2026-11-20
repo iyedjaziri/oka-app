@@ -90,7 +90,7 @@ http.createServer(async (req, res) => {
         return Buffer.from(await r.arrayBuffer());
       });
       conso.voix.phrases++; ajouter("voix", mesure);
-      console.log(`voix  ${mesure.duree.toFixed(1)} s · ${mesure.cpu.toFixed(1)} s CPU · ${(mesure.wh * 1000).toFixed(2)} mWh · « ${String(demande.texte).slice(0, 40)} »`);
+      console.log(`voix  ${formulaire.get("voice_url")} · ${mesure.duree.toFixed(1)} s · ${mesure.cpu.toFixed(1)} s CPU · ${(mesure.wh * 1000).toFixed(2)} mWh · « ${String(demande.texte).slice(0, 40)} »`);
       res.writeHead(200, { ...ENTETES, "content-type": "audio/wav", "x-oka-mesure": JSON.stringify(mesure) });
       return res.end(audio);
     }

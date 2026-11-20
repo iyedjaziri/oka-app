@@ -25,7 +25,6 @@ function setExpr(e){
   e = EXPR_ALIAS[e] || e;
   if (!EXPR[e]) e = "neutre";
   av.expr = e;
-  document.getElementById("exprLbl").textContent = EXPR[e].label;
   setImg(av.speaking ? EXPR[e].talk : EXPR[e].idle);
 }
 let lastBg = "";
