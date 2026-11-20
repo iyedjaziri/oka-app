@@ -26,6 +26,7 @@ function demarrer(){
   else { loadWeather(); setTimeout(() => checkReminders(), 3000); }
   chargerAnnonces(); setInterval(chargerAnnonces, 30*60000);
   chargerEvenements(false); setInterval(() => chargerEvenements(false), 6*3600e3);
+  chargerMessages(); setInterval(chargerMessages, 60000); // une vérification par minute : suffisant et sobre
 }
 // tablette distribuée : activation par code avant le profil
 if (activationRequise()) ouvrirActivation(demarrer); else demarrer();

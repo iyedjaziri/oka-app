@@ -86,7 +86,7 @@ async function activer(){
     if (appareil.ia) settings.mode = "claude";
     store.set("settings", settings);
     toast("OKA est activée avec " + j.structure + ".");
-    fermerActivation(); render(); chargerAnnonces();
+    fermerActivation(); render(); chargerAnnonces(); chargerMessages();
   }catch(e){
     msg.textContent = e.status === 404 ? "Ce code est inconnu, déjà utilisé ou expiré. Demandez un nouveau code à votre conseiller."
       : e.status ? e.message : "Pas de connexion internet. Réessayez quand la tablette est connectée.";
@@ -98,6 +98,7 @@ document.getElementById("ac_demo").onclick = fermerActivation;
 
 function tabletteDesactivee(){
   appareil = null; store.set("appareil", null);
+  if (rooms.equipe){ delete rooms.equipe; if (curRoom === "equipe") curRoom = "proches"; saveAll(); }
   if (settings.mode === "claude"){ settings.mode = "demo"; store.set("settings", settings); }
   toast("Cette tablette a été désactivée. Demandez un nouveau code à votre conseiller.", 9000);
   render();
@@ -134,6 +135,29 @@ function lireNouvellesAnnonces(){
 function viewAnnonces(){
   if (!annonces.length) return "";
   return `<h3>Infos de ${esc(appareil?.structure || "votre CCAS")}</h3>` + annonces.map(a => `<div class="card ${a.type === "alerte" ? "red" : ""}"><div class="big" style="font-size:calc(22px*var(--fs))">${ic(a.type === "alerte" ? "alert" : "building")} ${esc(a.titre)}</div>${a.texte ? `<div>${esc(a.texte)}</div>` : ""}</div>`).join("");
+}
+
+/* ---- messagerie avec l'équipe de la structure (CCAS, partenaires d'événements) ---- */
+// Un salon « équipe » dans l'onglet Messages ; les messages passent par le serveur (effacés après 30 jours).
+let messagesVus = store.get("messagesVus", []);
+async function chargerMessages(){
+  if (!serveurOk() || !appareil) return;
+  let j;
+  try{ j = await appelServeur("messages"); }catch(e){ return; } // hors ligne : on réessaiera
+  const r = rooms.equipe || (rooms.equipe = {nom:"", membres:[], serveur:true, msgs:[]});
+  r.nom = j.structure; r.membres = ["Équipe " + j.structure];
+  r.msgs = j.messages.map(m => ({from:m.auteur === "beneficiaire" ? me() : (m.nom || j.structure), text:m.texte, ts:Date.parse(m.date)}));
+  const nouveaux = j.messages.filter(m => m.auteur === "equipe" && !messagesVus.includes(m.id));
+  if (nouveaux.length){
+    messagesVus = messagesVus.concat(nouveaux.map(m => m.id)).slice(-300); store.set("messagesVus", messagesVus);
+    if (!(tab === "chat" && curRoom === "equipe")) unread.equipe = (unread.equipe || 0) + nouveaux.length;
+    if (!av.listening) say("Nouveau message de " + (nouveaux[0].nom || j.structure) + ".", "sociable", null, {queue:true});
+  }
+  saveAll(); render();
+}
+async function envoyerMessageEquipe(texte){
+  try{ await appelServeur("messages", {texte}); await chargerMessages(); }
+  catch(e){ toast(e.status === 422 ? "Message non envoyé : il contenait un code ou un mot de passe." : "Message non envoyé : pas de connexion. Réessayez plus tard."); }
 }
 
 /* ---- réglages : état de la tablette ---- */

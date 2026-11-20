@@ -53,3 +53,12 @@ dialog{border:0;border-radius:var(--r);border-top:6px solid var(--c-acc);padding
 dialog::backdrop{background:rgba(59,42,32,.55)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--c-btn);color:#fff;padding:10px 16px;border-radius:var(--r);z-index:9;max-width:calc(100% - 32px)}
 @media (max-width:640px){ header{padding:10px 16px} th:nth-child(n+4),td:nth-child(n+4){display:none} td:last-child,th:last-child{display:table-cell} }
+.msgs-admin{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
+.convs{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow:auto}
+.conv{text-align:left;border:1px solid var(--line);background:var(--c-card);border-radius:var(--r);padding:8px 10px;cursor:pointer;color:var(--c-text)}
+.conv.on{border-color:var(--c-nav);background:var(--orange-l)}
+.fil{border:1px solid var(--line);border-radius:var(--r);background:var(--c-card);padding:12px}
+.bulles{display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow:auto}
+.bulle{max-width:80%;padding:8px 12px;border-radius:12px;background:var(--soft)}
+.bulle.equipe{align-self:flex-end;background:var(--orange-l)}
+@media (max-width:760px){ .msgs-admin{grid-template-columns:1fr} }

@@ -14,3 +14,4 @@ supabase/functions/.env
 
 # serveurs locaux (voix, modèle) : environnements Python
 .venv-voix/
+exemples-voix/

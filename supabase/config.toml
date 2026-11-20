@@ -435,3 +435,6 @@ verify_jwt = false
 
 [functions.evenements]
 verify_jwt = false
+
+[functions.messages]
+verify_jwt = false

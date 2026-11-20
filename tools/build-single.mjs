@@ -15,7 +15,15 @@ let evts = null;
 try { evts = await evenementsNice(); console.log("événements de la Ville de Nice :", evts.evenements.length); }
 catch (e) { console.warn("événements non embarqués :", e.message); }
 const json = v => JSON.stringify(v).replace(/</g, "\\u003c");
-html = html.replace('<script src="config.js"></script>\n', () => "<script>window.OKA_CONFIG = {modeTest:true};" + (evts ? " window.OKA_EVENEMENTS = " + json(evts) + ";" : "") + "</script>\n");
+// phrases de voix pré-générées (npm run voix:clips), embarquées pour la démo hors ligne
+let clips = null;
+const idx = new URL("audio/voix/index.json", app);
+if (fs.existsSync(idx)) {
+  const j = JSON.parse(fs.readFileSync(idx, "utf8"));
+  clips = { voix: j.voix, phrases: Object.fromEntries(Object.keys(j.phrases).map(k => [k, "data:audio/wav;base64," + fs.readFileSync(new URL(`audio/voix/${j.voix}/${k}.wav`, app)).toString("base64")])) };
+  console.log("phrases de voix embarquées :", Object.keys(clips.phrases).length);
+}
+html = html.replace('<script src="config.js"></script>\n', () => "<script>window.OKA_CONFIG = {modeTest:true};" + (evts ? " window.OKA_EVENEMENTS = " + json(evts) + ";" : "") + (clips ? " window.OKA_CLIPS = " + json(clips) + ";" : "") + "</script>\n");
 html = html.replace(/src="img\/(\w+)\.webp"/g, (_, k) => 'src="data:image/webp;base64,' + fs.readFileSync(new URL("img/" + k + ".webp", app)).toString("base64") + '"');
 const scripts = [...html.matchAll(/<script src="(js\/[^"]+)"><\/script>\n/g)];
 for (const [balise, src] of scripts) {

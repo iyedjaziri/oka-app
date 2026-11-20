@@ -39,20 +39,23 @@ async function demarrer(session){
   if (!session){ moi = null; return vueConnexion(); }
   const { data } = await sb.from("equipe").select("*").eq("user_id", session.user.id).maybeSingle();
   if (!data){ await sb.auth.signOut(); return vueConnexion("Ce compte n'a pas accès à l'espace pro. Contactez un administrateur."); }
-  moi = { ...data, email: session.user.email, admin: data.role === "admin" };
+  moi = { ...data, email: session.user.email, admin: data.role === "admin", partenaire: data.role === "partenaire" };
   structures = await q(sb.from("structures").select("*").order("nom"));
-  $("qui").textContent = moi.email + " · " + (moi.admin ? "administrateur" : "référent " + (structures.find(s => s.id === moi.structure_id)?.nom || ""));
+  $("qui").textContent = moi.email + " · " + (moi.admin ? "administrateur" : (moi.partenaire ? "partenaire " : "référent ") + (structures.find(s => s.id === moi.structure_id)?.nom || ""));
   $("nav").classList.remove("hidden"); $("deco").classList.remove("hidden");
   document.querySelectorAll("#nav .admin").forEach(b => b.classList.toggle("hidden", !moi.admin));
-  afficher(vue);
+  // partenaire (organisateur d'événements) : annonces et messages seulement
+  document.querySelectorAll("#nav .gestion").forEach(b => b.classList.toggle("hidden", moi.partenaire));
+  afficher(moi.partenaire && vue === "beneficiaires" ? "messages" : vue);
 }
 sb?.auth.onAuthStateChange((ev, session) => { if (ev === "INITIAL_SESSION" || ev === "SIGNED_IN" || ev === "SIGNED_OUT") setTimeout(() => demarrer(session)); });
 
 $("nav").onclick = e => { const b = e.target.closest("button[data-v]"); if (b) afficher(b.dataset.v); };
+let rafraichir = null;
 function afficher(v){
-  vue = v;
+  vue = v; clearInterval(rafraichir);
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
-  ({ beneficiaires: vueBeneficiaires, annonces: vueAnnonces, structures: vueStructures, equipe: vueEquipe, journal: vueJournal }[v] || vueBeneficiaires)();
+  ({ beneficiaires: vueBeneficiaires, messages: vueMessages, annonces: vueAnnonces, structures: vueStructures, equipe: vueEquipe, journal: vueJournal }[v] || vueBeneficiaires)();
 }
 const choixStructure = (id, avecToutes) => moi.admin
   ? `<select class="f" id="${id}">${avecToutes ? `<option value="">Toutes les structures</option>` : ""}${structures.map(s => `<option value="${s.id}">${esc(s.nom)}</option>`).join("")}</select>`
@@ -107,6 +110,36 @@ async function vueBeneficiaires(){
     if (a === "suppr"){ if (!confirm("Supprimer « " + l + " » et ses tablettes ? Cette action est définitive.")) return; await q(sb.from("beneficiaires").delete().eq("id", id)); toast("Bénéficiaire supprimé."); }
     vueBeneficiaires();
   });
+}
+
+/* ---- messages avec les bénéficiaires (effacés après 30 jours) ---- */
+let convOuverte = null;
+async function vueMessages(){
+  const [benefs, msgs] = await Promise.all([
+    q(sb.from("beneficiaires").select("id, libelle, structure_id").order("libelle")),
+    q(sb.from("messages").select("id, beneficiaire_id, auteur, auteur_nom, texte, lu_le, created_at").order("created_at"))]);
+  const par = id => msgs.filter(m => m.beneficiaire_id === id), nonLus = id => par(id).filter(m => m.auteur === "beneficiaire" && !m.lu_le).length;
+  const liste = benefs.slice().sort((a, b) => (par(b.id).at(-1)?.created_at || "").localeCompare(par(a.id).at(-1)?.created_at || ""));
+  if (!convOuverte || !benefs.some(b => b.id === convOuverte)) convOuverte = liste[0]?.id || null;
+  const fil = convOuverte ? par(convOuverte) : [];
+  main.innerHTML = `<h1>Messages</h1><p class="muted small">Une conversation par bénéficiaire, visible par l'équipe de sa structure. Les messages sont effacés après 30 jours. Les codes et mots de passe sont refusés.</p>
+  <div class="msgs-admin"><div class="convs">${liste.map(b => { const d = par(b.id).at(-1), n = nonLus(b.id);
+    return `<button class="conv ${b.id === convOuverte ? "on" : ""}" data-conv="${b.id}"><b>${esc(b.libelle)}</b>${n ? ` <span class="pill actif">${n}</span>` : ""}<br><span class="small muted">${d ? esc(d.texte.slice(0, 50)) : "Aucun message"}</span></button>`; }).join("") || `<p class="muted">Aucun bénéficiaire.</p>`}</div>
+  <div class="fil">${convOuverte ? `<div class="bulles" id="bulles">${fil.map(m => `<div class="bulle ${m.auteur}"><div class="small muted">${m.auteur === "equipe" ? esc(m.auteur_nom || "Équipe") : esc(benefs.find(b => b.id === convOuverte).libelle)} · ${new Date(m.created_at).toLocaleString("fr-FR", {dateStyle:"short", timeStyle:"short"})}${m.auteur === "equipe" ? (m.lu_le ? " · lu" : " · envoyé") : ""}</div>${esc(m.texte)}</div>`).join("") || `<p class="muted">Pas encore de message.</p>`}</div>
+    <form class="row" id="rep" style="margin-top:10px"><div style="flex:1"><input class="f" id="rep_t" maxlength="1000" placeholder="Votre message (phrases courtes, il sera lu à voix haute)" autocomplete="off"></div><div style="flex:0 0 auto"><button class="btn">Envoyer</button></div></form>` : ""}</div></div>`;
+  main.querySelectorAll("[data-conv]").forEach(b => b.onclick = () => { convOuverte = b.dataset.conv; vueMessages(); });
+  const bl = $("bulles"); if (bl) bl.scrollTop = bl.scrollHeight;
+  const aLire = fil.filter(m => m.auteur === "beneficiaire" && !m.lu_le).map(m => m.id);
+  if (aLire.length) await sb.from("messages").update({ lu_le: new Date().toISOString() }).in("id", aLire);
+  const f = $("rep");
+  if (f) f.onsubmit = async e => {
+    e.preventDefault(); const t = $("rep_t").value.trim(); if (!t) return;
+    if (/(\d[ -]?){13,19}|mot de passe|code (secret|pin|de (la |ma )?carte)/i.test(t)) return toast("N'envoyez jamais de code, de mot de passe ni de numéro de carte.");
+    const signature = (moi.nom ? moi.nom + " – " : "") + (structures.find(s => s.id === moi.structure_id)?.nom || "OKA");
+    await q(sb.from("messages").insert({ beneficiaire_id: convOuverte, auteur: "equipe", auteur_nom: signature.slice(0, 60), texte: t }));
+    vueMessages();
+  };
+  clearInterval(rafraichir); rafraichir = setInterval(() => { if (vue === "messages" && !document.activeElement?.closest("#rep")) vueMessages(); }, 30000);
 }
 
 /* ---- annonces ---- */
@@ -169,10 +202,10 @@ async function vueEquipe(){
   <div class="card small">1. Créez le compte dans Supabase : <b>Authentication → Users → Add user</b> (e-mail + mot de passe, ou invitation).<br>2. Rattachez-le ici à une structure.</div>
   <form class="card" id="ne"><div class="row"><div><label for="ne_em">E-mail du compte</label><input class="f" id="ne_em" type="email" required></div>
     <div><label for="ne_nom">Nom</label><input class="f" id="ne_nom"></div>
-    <div style="flex:0 1 160px"><label for="ne_role">Rôle</label><select class="f" id="ne_role"><option value="referent">Référent</option><option value="admin">Administrateur</option></select></div>
+    <div style="flex:0 1 160px"><label for="ne_role">Rôle</label><select class="f" id="ne_role"><option value="referent">Référent</option><option value="partenaire">Partenaire (événements)</option><option value="admin">Administrateur</option></select></div>
     <div><label for="ne_st">Structure</label>${choixStructure("ne_st")}</div><div style="flex:0 0 auto"><button class="btn">Rattacher</button></div></div></form>
   <div class="tablewrap"><table><thead><tr><th>Membre</th><th>Rôle</th><th>Structure</th><th></th></tr></thead><tbody>
-  ${membres.map(m => `<tr><td><b>${esc(m.nom || m.email)}</b><br><span class="small muted">${esc(m.email)}</span></td><td>${m.role === "admin" ? "Administrateur" : "Référent"}</td>
+  ${membres.map(m => `<tr><td><b>${esc(m.nom || m.email)}</b><br><span class="small muted">${esc(m.email)}</span></td><td>${{admin:"Administrateur", referent:"Référent", partenaire:"Partenaire"}[m.role]}</td>
     <td class="small">${esc(structures.find(s => s.id === m.structure_id)?.nom || "—")}</td>
     <td>${m.user_id === moi.user_id ? "" : `<button class="btn sm red" data-retirer="${m.user_id}">Retirer l'accès</button>`}</td></tr>`).join("")}</tbody></table></div>`;
   $("ne").onsubmit = async e => {

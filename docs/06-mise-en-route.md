@@ -18,7 +18,8 @@ supabase/
   migrations/           database schema + Row Level Security
   functions/activer     activation code -> device token
   functions/annonces    announcements for a device
-  functions/ia          AI relay (Claude Haiku 5.5, safety filters, quota)
+  functions/ia          AI relay through the decision tree (Claude Haiku 5.5, or a local model), quota
+  functions/messages    tablet ↔ staff messaging (deleted after 30 days, codes refused)
   functions/evenements  City of Nice senior events (official nice.fr WordPress API, 15-min cache)
 tools/                  config generator, local server, single-file build
 legacy/                 the original v3 file, untouched
@@ -57,7 +58,19 @@ Supabase Studio: http://localhost:54323.
    ```
 3. http://localhost:8000/admin/ → log in → Structures: create "CCAS de Nice".
 
-Other staff: create the user in Studio, then attach them in the back office (Équipe tab).
+Other staff: create the user in Studio, then attach them in the back office (Équipe tab) with a role:
+
+| Role | Can do |
+|---|---|
+| `admin` (Diwaging) | everything, all structures |
+| `referent` (CCAS agent) | beneficiaries, activation codes, tablets, announcements, messages of their structure |
+| `partenaire` (event provider: association, maison des seniors) | announcements and messages of their structure; no access to tablets or beneficiary settings |
+
+### Messaging
+Staff and partners answer in the back office (Messages tab); the person sees a room named after their structure
+in the tablet's Messages tab, and OKA announces new messages once. Tablets check for new messages once a minute.
+Messages are stored on the server (the only personal content stored there), visible only to the person's structure,
+and deleted after 30 days. Messages containing a code, a password or a card number are refused on both sides.
 Public sign-up is disabled (`enable_signup = false`).
 
 ### Onboarding a beneficiary
@@ -73,7 +86,7 @@ npx supabase login
 npx supabase link --project-ref <ref>
 npx supabase db push
 npx supabase secrets set ANTHROPIC_API_KEY=... OKA_ORIGINES=https://<user>.github.io
-npx supabase functions deploy activer annonces ia evenements --no-verify-jwt
+npx supabase functions deploy activer annonces ia evenements messages --no-verify-jwt
 ```
 In the dashboard: Authentication → Sign In / Providers → disable "Allow new users to sign up";
 Authentication → URL Configuration → Site URL `https://<user>.github.io/<repo>/admin/`.
@@ -90,6 +103,11 @@ Free HTTPS on `https://<user>.github.io/<repo>/`. A custom domain can be added l
 ### Alternative: self-hosted back end
 Run the local stack on a machine that stays on and expose it with Cloudflare Tunnel or Tailscale Funnel
 (see doc 05 §8). Point `SUPABASE_URL` to that HTTPS address.
+
+## 3b. Local station (small model and voice on a machine)
+See `docs/08-sobriete-local.md`. In short: `ollama pull qwen2.5:1.5b`, install Pocket TTS in `.venv-voix`,
+`npm run voix:clips` once, then `npm run station`. For a hosted deployment, the relay can also use a small model served by Ollama on a team machine (exposed with a tunnel):
+`npx supabase secrets set IA_FOURNISSEUR=local IA_URL=<Ollama address> IA_MODELE=qwen2.5:1.5b` (the decision tree runs in the relay either way).
 
 ## 4. Checks after a change
 - Load the app and the back office, check the browser console (no errors).

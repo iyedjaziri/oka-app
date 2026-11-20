@@ -49,6 +49,9 @@ md += "\n<details><summary>Local patterns (regular expressions on normalised tex
 for (const b of src.barrieres) for (const x of b.sous || [b]) md += `| \`${x.id}\` | ${code(x.motifs)} |\n`;
 for (const i of src.intentions) md += `| \`${i.id}\` | ${code(i.motifs)} |\n`;
 for (const v of src.verification) md += `| output \`${v.id}\` | ${code(v.motifs)} |\n`;
+md += "\n</details>\n\n<details><summary>Classifier examples (few-shot, written to differ from the test scenarios)</summary>\n\n| Id | Examples |\n|---|---|\n";
+for (const b of src.barrieres) for (const x of b.sous || [b]) if (x.exemples) md += `| \`${x.id}\` | ${x.exemples.map(cell).join("<br>")} |\n`;
+for (const x of [...src.intentions, src.hors_arbre]) if (x.exemples) md += `| \`${x.id}\` | ${x.exemples.map(cell).join("<br>")} |\n`;
 md += "\n</details>\n";
 // le prompt du classifieur, tel qu'il est envoyé
 globalThis.ARBRE = arbre;

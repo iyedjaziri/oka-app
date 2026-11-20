@@ -22,8 +22,8 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  // la musique est lue par morceaux (requêtes partielles) : laissée au navigateur
-  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/admin/") || url.pathname.includes("/audio/")) return;
+  // la musique est lue par morceaux (requêtes partielles) : laissée au navigateur ; les phrases de voix sont gardées
+  if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/admin/") || (url.pathname.includes("/audio/") && !url.pathname.includes("/audio/voix/"))) return;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try{

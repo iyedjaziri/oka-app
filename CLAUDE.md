@@ -17,6 +17,7 @@ Read first, in this order:
 6. `docs/05-architecture-deploiement.md` – MVP architecture (PWA + Supabase), onboarding, hosting, phased plan
 7. `docs/06-mise-en-route.md` – repository layout, local run, deployment (GitHub Pages + Supabase)
 8. `docs/07-arbre-decisionnel.md` – decision tree: safety barriers, scope, AI classifier, output check, test results
+9. `docs/08-sobriete-local.md` – local station: small model, local voice, pre-recorded sentences, measured consumption
 
 ## Main deliverable
 The web app in `app/` (PWA, published on GitHub Pages) + the Supabase back end in `supabase/`.
@@ -42,8 +43,9 @@ See `docs/06-mise-en-route.md` for layout, commands and deployment.
   (symptoms, diagnosis, medication, doses) are never answered — redirect to the doctor; out-of-scope topics
   (politics, money, law, religion, gambling, weapons, sex, drugs, IT repair) get a polite refusal + redirection.
   Local filters run BEFORE any AI call.
-- AI: Claude Haiku 5.5 only (`claude-haiku-5-5`), last resort after local answers; max ~150 output tokens,
-  last 6 messages. Never on health.
+- AI: last resort after local answers, always through the decision tree (classifier + output check). Either Claude
+  Haiku 5.5 (`claude-haiku-5-5`, relay: ~150-200 output tokens, last 6 messages) or a small local model on the station
+  (`qwen2.5:1.5b` by default, doc 08) — team decision of 20 Nov 2026 for energy sobriety. Never on health.
 - OKA always says she is an AI when relevant; never claims feelings she doesn't have; never tries to become
   the person's only friend; does not prolong conversations or send repeated solicitations.
 - Demo data is fictional; calls, alerts and bookings are simulated.

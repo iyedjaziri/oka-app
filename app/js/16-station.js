@@ -38,7 +38,8 @@ const mwh = wh => (wh * 1000).toLocaleString("fr-FR", {maximumFractionDigits:2})
 function texteSobriete(){
   const s = sobriete, sansIA = Math.max(0, s.demandes - s.iaLocale - s.claude), pc = s.demandes ? Math.round(sansIA * 100 / s.demandes) : 0;
   return `Depuis le ${new Date(s.depuis).toLocaleDateString("fr-FR")} : ${s.demandes} demandes, dont ${sansIA} traitées sans IA (${pc} %), ` +
-    `${s.iaLocale} par le petit modèle local et ${s.claude} par Claude. Énergie estimée du calcul local (IA et ${s.phrasesVoix} phrases de voix) : ${mwh(s.wh)}. ` +
+    `${s.iaLocale} par le petit modèle local et ${s.claude} par Claude. Énergie estimée du calcul local (IA et ${s.phrasesVoix} phrases de voix) : ${mwh(s.wh)} ; ` +
+    `${s.clips || 0} phrases lues depuis les enregistrements préparés, sans calcul. ` +
     `La consommation de Claude n'est pas mesurable depuis cette machine.`;
 }
 function majStation(){
@@ -56,6 +57,26 @@ function majStation(){
     sel.innerHTML = station.voix.voix.map(v => `<option value="${esc(v.id)}">${esc(v.nom)}</option>`).join("");
     sel.value = settings.voixLocale || (station.voix.voix[0] || {}).id || "";
   } else if (sel) sel.innerHTML = `<option value="">Station hors ligne</option>`;
+}
+
+/* ---- phrases fixes pré-générées (npm run voix:clips) : aucune consommation à l'usage, disponibles hors ligne ---- */
+// fichier de démo : embarquées (window.OKA_CLIPS) ; application : app/audio/voix/index.json
+let clips = window.OKA_CLIPS || null;
+if (!clips) fetch("audio/voix/index.json").then(r => r.ok ? r.json() : null).then(j => { clips = j; }).catch(() => {});
+// même clé que tools/voix-clips.mjs
+const cleClip = s => { let h = 0x811c9dc5; for (const c of s.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ").trim()){ h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, "0"); };
+function clipVoix(s){
+  if (!clips || settings.moteurVoix !== "locale" || (settings.voixLocale && settings.voixLocale !== clips.voix)) return null;
+  const v = clips.phrases[cleClip(s)];
+  return typeof v === "string" ? v : v ? "audio/voix/" + clips.voix + "/" + cleClip(s) + ".wav" : null;
+}
+async function jouerClip(url, s, token){
+  try{
+    const blob = await (await fetch(url)).blob();
+    if (token !== speakToken) return;
+    sobriete.clips = (sobriete.clips || 0) + 1; store.set("sobriete", sobriete);
+    await jouerAudio(blob, s, token, Math.min(1.2, Math.max(.8, settings.rate / .85)));
+  }catch(e){ console.warn("clip", e); speakQueue.unshift(s); nextSentence(token, true); }
 }
 
 /* ---- voix IA locale : chaque phrase est préparée par la station, la suivante pendant que celle-ci est dite ---- */

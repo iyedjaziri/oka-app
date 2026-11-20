@@ -5,7 +5,7 @@
 //   GET  /etat       services en ligne, modèle, voix, consommation cumulée
 //   POST /ia         {system, messages, max_tokens} → {texte, stop, mesure}       (Ollama, petit modèle)
 //   GET  /voix       liste des voix
-//   POST /voix/tts   {texte, voix} → audio WAV, en-tête x-oka-mesure              (Pocket TTS)
+//   POST /voix/tts   {texte, voix} → audio WAV, en-tête x-oka-mesure              (Pocket TTS, modèle français)
 import http from "http";
 import fs from "fs";
 import { spawn } from "child_process";
@@ -15,16 +15,21 @@ const PORT = +(process.env.OKA_STATION_PORT || 8787);
 const OLLAMA = process.env.OLLAMA_URL || "http://localhost:11434";
 const MODELE = process.env.OKA_MODELE_LOCAL || "qwen2.5:1.5b";
 const PORT_VOIX = PORT + 1;
-const PYTHON = new URL("../.venv-voix/bin/python", import.meta.url).pathname;
-const SERVEUR_VOIX = new URL("./voix/serveur.py", import.meta.url).pathname;
+const POCKET = new URL("../.venv-voix/bin/pocket-tts", import.meta.url).pathname;
+// voix intégrées de Pocket TTS, disponibles avec le modèle français ; Estelle est la voix française d'origine
+const VOIX = [["estelle", "Estelle (voix française d'origine)"],
+  ...[["cosette", "Cosette"], ["fantine", "Fantine"], ["eponine", "Éponine"], ["azelma", "Azelma"], ["anna", "Anna"], ["vera", "Vera"], ["eve", "Eve"], ["mary", "Mary"], ["jane", "Jane"], ["alba", "Alba"], ["caro_davy", "Caro"]].map(([id, n]) => [id, n + " (féminine)"]),
+  ...[["marius", "Marius"], ["javert", "Javert"], ["jean", "Jean"], ["charles", "Charles"], ["paul", "Paul"], ["george", "George"], ["michael", "Michael"]].map(([id, n]) => [id, n + " (masculine)"])]
+  .map(([id, nom]) => ({ id, nom }));
 
 const conso = { depuis: new Date().toISOString(), ia: { appels: 0, cpu: 0, wh: 0, duree: 0 }, voix: { phrases: 0, cpu: 0, wh: 0, duree: 0 } };
 const ajouter = (k, m) => { const c = conso[k]; c.cpu += m.cpu; c.wh += m.wh; c.duree += m.duree; };
 
-/* ---- voix : serveur Python Pocket TTS lancé et arrêté avec la station ---- */
+/* ---- voix : serveur officiel Pocket TTS (modèle français allégé), lancé et arrêté avec la station ---- */
 let voix = null;
-if (fs.existsSync(PYTHON)) {
-  voix = spawn(PYTHON, [SERVEUR_VOIX, "--port", String(PORT_VOIX)], { stdio: ["ignore", "inherit", "inherit"] });
+if (fs.existsSync(POCKET)) {
+  voix = spawn(POCKET, ["serve", "--language", "french", "--quantize", "--port", String(PORT_VOIX)], { stdio: ["ignore", "ignore", "pipe"] });
+  voix.stderr.on("data", d => { if (/error|Uvicorn running/i.test(d)) process.stdout.write("voix  " + d); });
   voix.on("exit", c => { console.log("voix : serveur arrêté (" + c + ")"); voix = null; });
 } else console.log("voix : Pocket TTS non installé (voir docs/08-sobriete-local.md) – la voix du navigateur reste utilisée");
 const arret = () => { if (voix) voix.kill(); process.exit(0); };
@@ -38,7 +43,7 @@ async function etatOllama() {
   } catch { return { en_ligne: false, modele: MODELE }; }
 }
 async function etatVoix() {
-  try { const r = await fetch(`http://localhost:${PORT_VOIX}/voix`, { signal: AbortSignal.timeout(1500) }); return { en_ligne: true, voix: await r.json() }; }
+  try { const r = await fetch(`http://localhost:${PORT_VOIX}/health`, { signal: AbortSignal.timeout(1500) }); return { en_ligne: r.ok, voix: r.ok ? VOIX : [] }; }
   catch { return { en_ligne: false, voix: [] }; }
 }
 
@@ -75,8 +80,11 @@ http.createServer(async (req, res) => {
 
     if (chemin === "/voix/tts" && req.method === "POST") {
       const demande = await corps(req);
-      const { resultat: audio, mesure } = await mesurer("voix/serveur.py", async () => {
-        const r = await fetch(`http://localhost:${PORT_VOIX}/tts`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(demande) });
+      const formulaire = new FormData();
+      formulaire.set("text", String(demande.texte || "").slice(0, 400));
+      formulaire.set("voice_url", VOIX.some(v => v.id === demande.voix) ? demande.voix : "estelle");
+      const { resultat: audio, mesure } = await mesurer("pocket-tts", async () => {
+        const r = await fetch(`http://localhost:${PORT_VOIX}/tts`, { method: "POST", body: formulaire });
         if (!r.ok) throw new Error("voix " + r.status);
         return Buffer.from(await r.arrayBuffer());
       });

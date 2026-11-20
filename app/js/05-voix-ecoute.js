@@ -57,6 +57,7 @@ function nextSentence(token, sansLocale){
   if (token !== speakToken) return;
   const s = speakQueue.shift();
   if (!s){ finishSpeaking(); return; }
+  if (!sansLocale){ const c = clipVoix(s); if (c) return jouerClip(c, s, token); } // phrase fixe déjà enregistrée
   if (!sansLocale && settings.moteurVoix === "locale" && voixLocaleDispo()) return speakLocale(s, token);
   if (settings.elkey && settings.elvoice) return speakEleven(s, token);
   if (!synth){ // pas de synthèse : animation seule

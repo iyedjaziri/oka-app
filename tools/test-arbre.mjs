@@ -64,6 +64,8 @@ if (avecLocal){
 }
 const SYSTEME_TEST = "Tu es OKA, une panda roux animée, compagne de conversation de Giselle, 84 ans, qui vit seule à Nice. Tu vouvoies toujours. Phrases courtes, une seule question à la fois.";
 async function complet(s){
+  const loc = parcourirArbre(s.phrase);
+  if (loc.type === "intention" && loc.traitement === "local") return [loc.id === s.attendu || s.attendu === "*" ? "✅" : "❌", "local, aucun appel au modèle", "(fonction locale : " + loc.id + ")"];
   const r = await repondreAvecArbre({system:SYSTEME_TEST, messages:[{role:"user", content:s.phrase}], appeler});
   const id = r.route || (r.decision && r.decision.id) || null;
   const texte = r.route ? "(fonction locale : " + r.route + ")" : (r.texte || "").replace(/\[\[[^\]]*\]\]/g, "").trim();

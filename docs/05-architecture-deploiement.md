@@ -64,6 +64,8 @@ Web technology is the right choice: any browser, old tablets, no app store. The 
 | Announcements: text, target structure, dates | Server | Real information for users. |
 | Profile, contacts, agenda, history, memories, game state | **Device only** (`localStorage`) | Nothing personal leaves the tablet. |
 | Free questions sent to the AI | Pass through the relay, **never stored** | The relay also enforces safety rules and limits. |
+| Messages between the person and their structure (staff, event partners) | Server, **deleted after 30 days**, visible only to that structure | The only personal content kept on the server (added 20 Nov 2026 for staff ↔ user messaging). Codes and passwords refused. |
+| Free questions sent to a **local model** (station) | Stay on the team machine, never stored | Sobriety option, see doc 08. |
 
 Consequence to accept for the MVP: if a tablet is lost or wiped, its profile is lost (re-done at a visit).
 An encrypted backup can come later.
@@ -148,7 +150,7 @@ shown in existing views.
 ## 12. Open decisions (in addition to D1–D8 in the executive brief)
 | # | Question |
 |---|---|
-| D9 | AI provider: Claude Haiku 5.5 only (current rule in CLAUDE.md) or allow a local lightweight model (e.g. via Ollama)? Small models are weaker in French and at following safety rules; local filters must stay first either way. |
+| D9 | AI provider — implemented as a choice (doc 08): Claude Haiku 5.5 or a small local model via the station, both through the decision tree. Remaining question: which one by default in production? Small models are weaker in French and at following safety rules; local filters must stay first either way. |
 | D10 | Who creates accounts: Diwaging only, or each CCAS for its own beneficiaries (roles + announcement targeting)? |
 | D11 | Hosting: Supabase cloud EU, self-hosted on a team machine, or both (dev local / demo cloud)? Own domain or free subdomain? |
 | D12 | Jury date: decides whether phases 1–2 happen before or after the demo. |
