@@ -17,10 +17,9 @@ async function handleUser(text){
     if (l) return chooseLevel(l);
     if (!/(jouer|morpion|puissance|echec|sudoku|scrabble|memo)/.test(n)) return say("Dites facile, moyen ou difficile.", "rappel");
   }
-  if (pending && pending.type === "conflit"){
-    if (has(n, "report", "oui", "d accord", "volontiers", "deplace", "decale")) return resolveConflict("report");
-    if (has(n, "les deux", "garde", "quand meme")) return resolveConflict("both");
-    if (has(n, "non", "annul", "laisse tomber")) return resolveConflict("cancel");
+  if (pending && pending.type === "choixSuppr"){ // lequel des rendez-vous supprimer
+    const p = pending, e = p.choix.find(x => norm(x.titre).split(/[^a-z0-9]+/).some(w => w.length > 3 && n.includes(w)) || n.includes(norm(relDay(x.date))));
+    pending = null; if (e) return confirmerSuppression(e);
   }
   if (pending && PENDING_SORTIE.has(pending.type) && repondreSortie(text, n)) return;
   if (pending && pending.type === "confirmer" && repondreConfirmation(n)) return;
@@ -76,6 +75,7 @@ function demoReply(text, n){
   if (has(n, "bonjour", "salut", "coucou", "bonsoir")) return say(greeting(), "heureux");
   if (has(n, "quelle heure", "l heure")){ const d = new Date(); return say("Il est " + d.getHours() + " heure" + (d.getHours()>1?"s":"") + (d.getMinutes() ? " " + d.getMinutes() : "") + ".", "neutre"); }
   if (has(n, "quel jour", "la date", "on est quel", "quelle date")){ const d = new Date(); return say("Nous sommes " + JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] + " " + d.getFullYear() + ".", "neutre"); }
+  if (/\b(annule|annuler|supprime|supprimer|efface|effacer|retire|retirer|enleve|enlever)\b/.test(n) && (has(n, "rendez", "rdv", "agenda") || rdvVises(n).length)) return agendaSuppression(text, n);
   if (has(n, "rendez-vous", "rendez vous", "rdv") && has(n, "ajoute", "note", "prends", "prendre", "mets", "inscris")){ return agendaFromSpeech(text, n); }
   if (has(n, "ajoute", "note dans", "mets dans") && has(n, "agenda", "lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche","demain")) return agendaFromSpeech(text, n);
   if (has(n, "agenda", "programme", "rendez-vous", "rendez vous", "aujourd hui", "demain", "cette semaine", "qu est-ce que j ai", "qu est ce que j ai")){ showTab("agenda"); return say(agendaSpeech(has(n, "semaine") ? 7 : has(n,"demain") ? -1 : 2), "rappel"); }

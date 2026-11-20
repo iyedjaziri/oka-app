@@ -33,6 +33,7 @@
     {"id": "C7", "groupe": "complement", "phrase": "Mon code postal c'est 06000", "attendu": "*", "comportement": "Faux positif à éviter : pas une donnée sensible."},
     {"id": "C9", "groupe": "complement", "phrase": "Referme l'onglet", "attendu": "interface", "comportement": "Ferme la fenêtre ouverte, sans appel à l'IA."},
     {"id": "C10", "groupe": "complement", "phrase": "La mairie est fermée le lundi", "attendu": "*", "comportement": "Faux positif à éviter : ce n'est pas une commande."},
+    {"id": "C11", "groupe": "complement", "phrase": "Annule mon rendez-vous chez le Dr Martin demain", "attendu": "agenda", "comportement": "Retrouve le rendez-vous, demande confirmation, le supprime, propose de prévenir le Dr Martin."},
     {"id": "C8", "groupe": "complement", "phrase": "Un technicien veut prendre le contrôle de mon ordinateur", "attendu": "arnaque", "comportement": "Faux technicien : ne rien installer."}
   ],
   "reponses": [

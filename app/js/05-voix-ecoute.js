@@ -63,10 +63,11 @@ function nextSentence(token, sansLocale){
   if (!synth){ // pas de synthèse : animation seule
     lipStart(s, 1); setTimeout(() => { lipStop(); setTimeout(() => nextSentence(token), 250); }, s.length/13*1000); return;
   }
-  const u = new SpeechSynthesisUtterance(s);
+  const dit = nombresEnLettres(s); // les voix lisent mal les chiffres
+  const u = new SpeechSynthesisUtterance(dit);
   u.lang = "fr-FR"; u.rate = settings.rate; u.pitch = 1.05;
   const v = pickVoice(); if (v) u.voice = v;
-  u.onstart = () => lipStart(s, settings.rate);
+  u.onstart = () => lipStart(dit, settings.rate);
   u.onboundary = e => { if (e.charIndex != null) lipBoundary(e.charIndex); };
   let ended = false, started = false, tries = 0;
   const end = () => { if (ended) return; ended = true; clearInterval(keep); lipStop(); setTimeout(() => nextSentence(token), 260); };
@@ -106,7 +107,7 @@ async function speakEleven(s, token){
   try{
     const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(settings.elvoice)}`, {
       method:"POST", headers:{"xi-api-key":settings.elkey, "Content-Type":"application/json", "Accept":"audio/mpeg"},
-      body:JSON.stringify({text:s, model_id:"eleven_multilingual_v2", voice_settings:{stability:.6, similarity_boost:.8}})
+      body:JSON.stringify({text:nombresEnLettres(s), model_id:"eleven_multilingual_v2", voice_settings:{stability:.6, similarity_boost:.8}})
     });
     if (!r.ok) throw new Error("ElevenLabs "+r.status);
     const blob = await r.blob();

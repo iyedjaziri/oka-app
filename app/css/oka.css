@@ -492,3 +492,13 @@ body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--be
 #st_volMusique{accent-color:var(--c-nav);padding:6px 10px}
 .b .trace{margin-top:6px;padding-top:4px;border-top:1px dashed var(--line);font-size:calc(14px*var(--fs));color:var(--muted);font-weight:500}
 #simpleSub{cursor:pointer}
+/* réglages avancés : défilement normal, barre visible */
+#settingsModal{align-items:flex-start}
+#settingsModal .box{max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:auto;scrollbar-color:var(--c-nav) var(--beige-2)}
+#settingsModal .box::-webkit-scrollbar{width:14px}
+#settingsModal .box::-webkit-scrollbar-thumb{background:var(--c-nav);border-radius:7px;border:3px solid var(--beige-2)}
+#settingsModal .box::-webkit-scrollbar-track{background:var(--beige-2)}
+/* onglet Sorties : taille fixe, contenu qui défile sous les sous-onglets */
+#panelIn.defile{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-color:var(--c-nav) var(--beige-2)}
+#panelIn.defile .seg{position:sticky;top:0;z-index:2;background:var(--paper);padding-bottom:8px;margin-bottom:4px}
+#panelIn.defile{padding-bottom:72px} /* le bas de la liste passe au-dessus des boutons musique et saison */

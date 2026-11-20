@@ -31,68 +31,80 @@ function agendaFromSpeech(text, n){
 }
 
 
-/* ---- double rendez-vous : alerte et proposition de report ---- */
+/* ---- rendez-vous trop proches : OKA prévient, ne décide rien ---- */
+// Deux rendez-vous le même jour à moins de 30 minutes d'écart : le second n'est pas ajouté ;
+// OKA le dit simplement, la personne choisit elle-même un autre horaire.
+const ECART_MIN = 30;
 const toMin = h => (+h.slice(0,2))*60 + (+h.slice(3,5));
-const fromMin = m => pad(Math.floor(m/60)) + ":" + pad(m%60);
-const clash = (a, b) => a.date === b.date && a.id !== b.id && Math.abs(toMin(a.heure) - toMin(b.heure)) < 60;
+const clash = (a, b) => a.date === b.date && a.id !== b.id && Math.abs(toMin(a.heure) - toMin(b.heure)) < ECART_MIN;
 const conflictsOf = ev => agenda.filter(e => clash(e, ev));
-function freeSlot(ev){
-  for (let d = 0; d < 7; d++){
-    const date = iso(addDays(new Date(ev.date + "T12:00"), d));
-    const base = d === 0 ? toMin(ev.heure) + 60 : toMin(ev.heure);
-    for (let m = base; m <= 19*60; m += 60){
-      const c = {id:ev.id, date, heure:fromMin(m)};
-      if (new Date(date + "T" + c.heure) < new Date()) continue;
-      if (!agenda.some(e => e.id !== ev.id && clash(e, c))) return c;
-    }
-  }
-  return null;
-}
-let conflict = null;
-// ajoute un rendez-vous en vérifiant qu'il n'en chevauche pas un autre
+// ajoute un rendez-vous s'il ne tombe pas dans la même demi-heure qu'un autre ; renvoie vrai s'il est ajouté
 function tryAddEvent(ev, okMsg){
   ev.id = ev.id || uid();
   const c = conflictsOf(ev)[0];
-  if (!c){ addEvent(ev); if (okMsg) say(okMsg, "bonne"); return; }
-  // on reporte de préférence le rendez-vous qui n'est pas une activité à heure fixe
-  const move = ev.type === "activite" && c.type !== "activite" ? c : ev;
-  const prop = freeSlot(move);
-  conflict = {ev, other:c, move, prop};
-  const txt = `Attention, ${relDay(ev.date)} à ${hourSpeech(c.heure)}, vous avez déjà : ${c.titre}. ` +
-    (prop ? `Je vous propose de reporter « ${move.titre} » ${relDay(prop.date)} à ${hourSpeech(prop.heure)}. Voulez-vous le reporter ?` : "Voulez-vous garder les deux rendez-vous ?");
-  say(txt, "rappel");
-  pending = {type:"conflit"};
-  const box = document.getElementById("confModal");
-  document.getElementById("cf_msg").textContent = txt;
-  document.getElementById("cf_acts").innerHTML =
-    (prop ? `<button class="btn orange" data-cf="report">${ic("calendar")} Reporter ${relDay(prop.date)} à ${prop.heure.replace(":","h")}</button>` : "") +
-    `<button class="btn alt" data-cf="both">Garder les deux</button><button class="btn ghost" data-cf="cancel">Annuler</button>`;
-  box.querySelectorAll("[data-cf]").forEach(b => b.onclick = () => resolveConflict(b.dataset.cf));
-  box.classList.remove("hidden");
-}
-function resolveConflict(choice){
-  const c = conflict; conflict = null; pending = null;
-  document.getElementById("confModal").classList.add("hidden");
-  if (!c) return;
-  const isAct = c.ev.type === "activite";
-  if (choice === "cancel"){ if (isAct) desinscrire(c.ev.id.replace(/^act_/, "")); say("D'accord, je n'ajoute rien.", "neutre"); return; }
-  if (choice === "report" && c.prop){
-    if (c.move === c.ev){ c.ev.date = c.prop.date; c.ev.heure = c.prop.heure; addEvent(c.ev); }
-    else { c.move.date = c.prop.date; c.move.heure = c.prop.heure; agenda.sort(byTime); addEvent(c.ev); }
-    say(`C'est fait : « ${c.move.titre} » est reporté ${relDay(c.prop.date)} à ${hourSpeech(c.prop.heure)}.`, "bonne");
-    return;
-  }
-  addEvent(c.ev); say("D'accord, je garde les deux rendez-vous dans votre agenda.", "neutre");
+  if (!c){ addEvent(ev); if (okMsg) say(okMsg, "bonne"); return true; }
+  const txt = `Attention : ${relDay(ev.date)} à ${hourSpeech(c.heure)}, vous avez déjà « ${c.titre} ». ` +
+    `Je n'ajoute pas « ${ev.titre} » à ${hourSpeech(ev.heure)}, c'est trop proche. Choisissez un autre horaire, au moins une demi-heure avant ou après.`;
+  toast(txt, 9000); say(txt, "rappel");
+  return false;
 }
 function agendaClashes(){
   const out = [];
   agenda.forEach((a, i) => agenda.slice(i+1).forEach(b => { if (clash(a, b) && a.date >= iso(new Date())) out.push([a, b]); }));
   return out;
 }
-function fixClash(i){
-  const [a, b] = agendaClashes()[i] || []; if (!a) return;
-  agenda = agenda.filter(e => e.id !== b.id); // on retire b puis on le repropose
-  tryAddEvent(b);
+
+/* ---- supprimer un rendez-vous à la voix, puis prévenir les personnes concernées ---- */
+// « Annule mon rendez-vous chez le coiffeur », « supprime le rendez-vous de jeudi » : OKA retrouve le rendez-vous,
+// demande confirmation, le retire, puis propose de prévenir les personnes concernées (jamais sans accord).
+function rdvVises(n){
+  const t = iso(new Date()), futurs = agenda.filter(e => e.date >= t).sort(byTime);
+  let l = futurs;
+  if (n.includes("apres-demain") || n.includes("apres demain")) l = l.filter(e => e.date === iso(addDays(new Date(), 2)));
+  else if (n.includes("demain")) l = l.filter(e => e.date === iso(addDays(new Date(), 1)));
+  else if (n.includes("aujourd hui")) l = l.filter(e => e.date === t);
+  else { const j = JOURS.findIndex(j => n.includes(j)); if (j >= 0) l = l.filter(e => new Date(e.date + "T12:00").getDay() === j); }
+  const mh = n.match(/(\d{1,2})\s*(?:h|heures?)\s*(\d{1,2})?/);
+  if (mh) l = l.filter(e => Math.abs(toMin(e.heure) - (+mh[1]*60 + (+mh[2] || 0))) < ECART_MIN);
+  // mots du titre (« coiffeur », « Sophie », « kiné »…)
+  const mots = e => norm(e.titre).split(/[^a-z0-9]+/).filter(w => w.length > 3 && !["avec","chez","rendez","vous"].includes(w));
+  const parMot = l.filter(e => mots(e).some(w => n.includes(w)));
+  return parMot.length ? parMot : l === futurs ? [] : l;
+}
+function concernes(e){
+  const t = norm(e.titre + " " + (e.lieu || ""));
+  return people().filter(p => { const w = norm(p.nom).replace(/^(dr|mme|m) /, "").split(" ")[0]; return w.length > 2 && t.includes(w); });
+}
+function agendaSuppression(text, n){
+  const l = rdvVises(n);
+  if (!l.length) return say("Je ne trouve pas ce rendez-vous dans votre agenda. Dites par exemple : annule le rendez-vous de jeudi.", "oublie");
+  if (l.length > 1){
+    const choix = l.slice(0, 3);
+    return say("Vous avez " + choix.map(e => "« " + e.titre + " », " + relDay(e.date) + " à " + hourSpeech(e.heure)).join(", et ") + ". Lequel voulez-vous supprimer ?",
+      "rappel", () => { pending = {type:"choixSuppr", choix}; });
+  }
+  confirmerSuppression(l[0]);
+}
+function confirmerSuppression(e){
+  say("Je supprime « " + e.titre + " », " + relDay(e.date) + " à " + hourSpeech(e.heure) + " ?", "rappel",
+    () => { pending = {type:"confirmer", actions:[{question:"je supprime « " + e.titre + " »", faire:() => supprimerRdv(e)}]}; });
+}
+function supprimerRdv(e){
+  if (e.id.startsWith("act_")) desinscrire(e.id.slice(4)); else delEvent(e.id);
+  const qui = concernes(e), act = activities.find(a => "act_" + a.id === e.id);
+  if (qui.length){
+    return say("C'est supprimé. Voulez-vous que je prévienne " + qui.map(p => p.nom).join(" et ") + " ?", "rappel",
+      () => { pending = {type:"confirmer", actions:[{question:"je préviens " + qui.map(p => p.nom).join(" et "), faire:() => prevenirAnnulation(e, qui)}]}; });
+  }
+  const tel = act && (act.inscription || "").match(/0\d(?:[ .]?\d\d){4}/);
+  say("C'est supprimé." + (tel ? " Pensez à prévenir l'organisateur au " + tel[0] + "." : act ? " Pensez à prévenir l'organisateur de votre absence." : ""), "neutre");
+}
+// démonstration : les proches reçoivent un message ; les soignants et aidants, un SMS simulé
+function prevenirAnnulation(e, qui){
+  const mot = "Je dois annuler « " + e.titre + " », " + relDay(e.date) + " à " + e.heure.replace(":", "h") + ". Désolée !";
+  if (qui.some(p => p.type === "proche")) postMsg("proches", me(), mot);
+  qui.filter(p => p.type !== "proche").forEach(p => toast("SMS envoyé à " + p.nom + " (simulé) : " + mot, 7000));
+  say("C'est fait, j'ai prévenu " + qui.map(p => p.nom).join(" et ") + ".", "bonne");
 }
 
 /* ---- rappel de rendez-vous ---- */

@@ -208,11 +208,12 @@ const ARBRE = {
   {
    "id": "agenda",
    "nom": "Agenda et rendez-vous",
-   "description": "Consulter la semaine, ajouter ou déplacer un rendez-vous, rappels.",
+   "description": "Consulter la semaine, ajouter un rendez-vous (jamais deux dans la même demi-heure), supprimer un rendez-vous et prévenir les personnes concernées, rappels.",
    "traitement": "local",
-   "fonction": "Onglet Agenda, agendaSpeech, agendaFromSpeech",
+   "fonction": "Onglet Agenda, agendaSpeech, agendaFromSpeech, agendaSuppression",
    "motifs": [
-    "\\b(agenda|rendez[- ]vous|rdv|programme|qu est[- ]ce que j ai|cette semaine|rappelle[- ]moi)\\b"
+    "\\b(agenda|rendez[- ]vous|rdv|programme|qu est[- ]ce que j ai|cette semaine|rappelle[- ]moi)\\b",
+    "\\b(annule|annuler|supprime|supprimer|efface|effacer|retire|enleve)\\b.{0,50}\\b(rendez[- ]vous|rdv|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|demain|aujourd hui)\\b"
    ],
    "exemples": [
     "Je dois aller chez le dentiste mardi",

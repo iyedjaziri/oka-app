@@ -2,7 +2,7 @@
 
 /* ================= INTERFACE ================= */
 let tab = "today";
-const TAB_TITLES = {today:"Aujourd'hui", agenda:"Mon agenda", proches:"Mes proches", sorties:"Sorties et CCAS", chat:"Messages", urgence:"Urgence", log:"Historique de la conversation", jeux:"Jeux avec OKA"};
+const TAB_TITLES = {today:"Aujourd'hui", agenda:"Mon agenda", proches:"Mes proches", sorties:"Sorties", chat:"Messages", urgence:"Urgence", log:"Historique de la conversation", jeux:"Jeux avec OKA"};
 let winOpen = false;
 // ouvre la fenêtre d'un onglet (clic sur la barre latérale, ou demande à OKA)
 function showTab(t, focusId){
@@ -203,7 +203,7 @@ function render(){
   const n = Object.values(unread).reduce((a,b) => a+b, 0), dot = document.getElementById("chatDot");
   dot.textContent = n; dot.classList.toggle("hidden", !n);
   const P = document.getElementById("panel");
-  P.innerHTML = `<div id="panelIn" class="${tab === "chat" ? "fill" : ""}">` + ({today:viewToday, agenda:viewAgenda, proches:viewProches, sorties:viewSorties, chat:viewChat, urgence:viewUrgence, log:() => "", jeux:viewJeux}[tab] || viewToday)() + `</div>`;
+  P.innerHTML = `<div id="panelIn" class="${tab === "chat" ? "fill" : tab === "sorties" ? "defile" : ""}">` + ({today:viewToday, agenda:viewAgenda, proches:viewProches, sorties:viewSorties, chat:viewChat, urgence:viewUrgence, log:() => "", jeux:viewJeux}[tab] || viewToday)() + `</div>`;
   bindPanel();
   fitPanel();
 }
@@ -220,13 +220,15 @@ function fitBox(box, avail){
 }
 function fitPanel(){
   const P = document.getElementById("panel"), inn = document.getElementById("panelIn");
-  if (!inn || !winOpen || tab === "log" || inn.classList.contains("fill")) { if (inn) inn.style.zoom = 1; return; }
+  // Sorties : taille fixe et défilement (les sous-onglets ne changent plus de taille d'un clic à l'autre)
+  if (!inn || !winOpen || tab === "log" || inn.classList.contains("fill") || inn.classList.contains("defile")) { if (inn) inn.style.zoom = 1; return; }
   const cs = getComputedStyle(P);
   document.documentElement.style.setProperty("--panH", P.clientHeight + "px");
   fitBox(inn, P.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
 }
 function fitModals(){
-  document.querySelectorAll(".modal:not(.hidden) .box, .alert:not(.hidden) .box").forEach(b => fitBox(b, innerHeight - 40));
+  // les réglages défilent (barre de défilement) au lieu d'être rétrécis : tout reste lisible
+  document.querySelectorAll(".modal:not(.hidden):not(#settingsModal) .box, .alert:not(.hidden) .box").forEach(b => fitBox(b, innerHeight - 40));
 }
 function fitCaption(){
   const el = document.getElementById("simpleSub"); if (!el) return;
@@ -246,7 +248,7 @@ function viewToday(){
   const ins = activities.filter(a => a.inscrit).length;
   const cl = agendaClashes();
   return `<h2>Bonjour ${esc(me())}</h2>
-  ${cl.map(([a,b], i) => `<div class="card warn"><div class="big" style="font-size:calc(22px*var(--fs))">${ic("alert")} Deux rendez-vous en même temps</div><div style="font-size:calc(20px*var(--fs))">${esc(relDay(a.date))} : ${esc(a.titre)} (${a.heure.replace(":","h")}) et ${esc(b.titre)} (${b.heure.replace(":","h")})</div><button class="btn sm orange" style="margin-top:8px" data-fix="${i}">${ic("calendar")} Proposer un report</button></div>`).join("")}
+  ${cl.map(([a,b]) => `<div class="card warn"><div class="big" style="font-size:calc(22px*var(--fs))">${ic("alert")} Deux rendez-vous à moins d'une demi-heure</div><div style="font-size:calc(20px*var(--fs))">${esc(relDay(a.date))} : ${esc(a.titre)} (${a.heure.replace(":","h")}) et ${esc(b.titre)} (${b.heure.replace(":","h")}). Vous pouvez en supprimer un dans l'agenda.</div></div>`).join("")}
   ${al ? `<div class="card ${al.k==="froid"?"blue":"red"}"><div class="big">${ic("alert")} Météo préventive : ${esc(al.titre)}</div><ul class="adv">${al.conseils.map(c => `<li>${esc(c)}</li>`).join("")}</ul><button class="btn sm" style="margin-top:8px" data-say="wx">${ic("speaker")} Écouter les conseils</button></div>` : ""}
   ${viewAnnonces()}
   <h3>Prochain rendez-vous</h3>
@@ -276,11 +278,11 @@ let sortiesView = "act";
 function viewSorties(){
   const url = ccasUrl(), ville = profile?.ville || "Nice", isNice = norm(ville).trim() === "nice";
   const fr = (profile?.pays || "FR") === "FR";
-  const seg = `<div class="seg"><button class="${sortiesView === "act" ? "on" : ""}" data-a="sv" data-i="act">${ic("star")} Activités de la semaine</button><button class="${sortiesView === "ville" ? "on" : ""}" data-a="sv" data-i="ville">${ic("home")} Maisons des seniors</button><button class="${sortiesView === "ccas" ? "on" : ""}" data-a="sv" data-i="ccas">${ic("building")} CCAS et associations</button></div>`;
+  const seg = `<div class="seg"><button class="${sortiesView === "act" ? "on" : ""}" data-a="sv" data-i="act">${ic("star")} Activités</button><button class="${sortiesView === "ville" ? "on" : ""}" data-a="sv" data-i="ville">${ic("home")} Maisons des seniors</button><button class="${sortiesView === "ccas" ? "on" : ""}" data-a="sv" data-i="ccas">${ic("building")} CCAS et associations</button></div>`;
   if (sortiesView === "ville") return seg + viewVille();
   if (sortiesView === "act") return seg + `<div class="plist2">${activities.slice().sort(byTime).map(a => `<div class="prow ${a.inscrit?"okrow":""}">
     <div class="pinfo"><div class="pn">${esc(a.titre)}</div><div class="small">${esc(relDay(a.date))} à ${a.heure.replace(":","h")} · ${esc(a.lieu)}</div></div>
-    <div class="pact">${a.inscrit ? `<button class="btn sm alt" data-room="act_${a.id}">${ic("chat")}<span>Groupe</span></button><button class="btn sm ghost" data-unsub="${a.id}" aria-label="Se désinscrire">${ic("x")}</button>` : `<button class="btn sm" data-sub="${a.id}">S'inscrire</button>`}</div></div>`).join("")}</div>${activities.some(a => !String(a.id).startsWith("ann_")) ? `<p class="muted small" style="margin:6px 0 0">Activités d'exemple pour la démo.</p>` : ""}`;
+    <div class="pact">${a.inscrit ? `<button class="btn sm alt" data-room="act_${a.id}">${ic("chat")}<span>Groupe</span></button><button class="btn sm ghost" data-unsub="${a.id}" aria-label="Se désinscrire">${ic("x")}</button>` : `<button class="btn sm" data-sub="${a.id}">S'inscrire</button>`}</div></div>`).join("")}</div>`;
   return seg + `
   <div class="card blue"><div class="big">${ic("building")} CCAS de ${esc(ville)}</div>
   ${fr ? `<p style="margin:6px 0">Le Centre Communal d'Action Sociale accompagne les seniors : aides, repas, activités, visites.</p><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Ouvrir l'annuaire des CCAS ${geo?.admin2 ? "· "+esc(geo.admin2) : ""}</a><div class="muted small" style="margin-top:6px">${esc(url)}</div>`
@@ -310,7 +312,6 @@ function bindPanel(){
   P.querySelectorAll("[data-del]").forEach(b => b.onclick = () => delEvent(b.dataset.del));
   P.querySelectorAll("[data-a=sv]").forEach(b => b.onclick = () => { sortiesView = b.dataset.i; render(); });
   P.querySelectorAll("[data-a=agf]").forEach(b => b.onclick = () => { agendaForm = !agendaForm; render(); });
-  P.querySelectorAll("[data-fix]").forEach(b => b.onclick = () => fixClash(+b.dataset.fix));
   P.querySelectorAll("[data-sub]").forEach(b => b.onclick = () => inscrire(b.dataset.sub, true));
   bindVille(P);
   P.querySelectorAll("[data-unsub]").forEach(b => b.onclick = () => desinscrire(b.dataset.unsub));

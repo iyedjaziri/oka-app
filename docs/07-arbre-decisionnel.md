@@ -160,7 +160,7 @@ flowchart TD
 | `interface` | Commandes de l'écran | Fermer la fenêtre ouverte, revenir à l'accueil. | local (offline, no AI) | closeWin |
 | `salutation` | Salutations et nouvelles | Bonjour, bonsoir, comment ça va, au revoir, merci. | local (offline, no AI) | Réponse locale (greeting) |
 | `infos_pratiques` | Heure et date | Quelle heure est-il, quel jour sommes-nous. | local (offline, no AI) | Calcul local |
-| `agenda` | Agenda et rendez-vous | Consulter la semaine, ajouter ou déplacer un rendez-vous, rappels. | local (offline, no AI) | Onglet Agenda, agendaSpeech, agendaFromSpeech |
+| `agenda` | Agenda et rendez-vous | Consulter la semaine, ajouter un rendez-vous (jamais deux dans la même demi-heure), supprimer un rendez-vous et prévenir les personnes concernées, rappels. | local (offline, no AI) | Onglet Agenda, agendaSpeech, agendaFromSpeech, agendaSuppression |
 | `meteo` | Météo | Temps du jour, prévisions, chaleur, froid. | local (offline, no AI) | Onglet Aujourd'hui, open-meteo |
 | `proches` | Proches et messages | Appeler un proche, lire ou écrire un message. | local (offline, no AI) | Onglets Proches et Messages, callPerson |
 | `sorties` | Sorties et activités | Activités, maisons des seniors, CCAS, inscription, que faire aujourd'hui. | local (offline, no AI) | Onglet Sorties, inscrireSortie, Ville de Nice |
@@ -242,7 +242,7 @@ flowchart TD
 | `interface` | `^(tu peux \|peux-tu \|vous pouvez )?(re)?ferme[rz]?( (l onglet\|la fenetre\|la page\|tout\|ca\|cette fenetre\|cet onglet))?( s il (te\|vous) plait)?[ .!]*$\|\b(reviens\|retour\|retourne) (a l \|sur l )?accueil\b` |
 | `salutation` | `\b(bonjour\|bonsoir\|salut\|coucou\|au revoir\|a bientot\|merci\|comment (vas\|allez\|ca va))\b` |
 | `infos_pratiques` | `quelle heure\|l heure\|quel jour\|la date\|on est quel\|quelle date` |
-| `agenda` | `\b(agenda\|rendez[- ]vous\|rdv\|programme\|qu est[- ]ce que j ai\|cette semaine\|rappelle[- ]moi)\b` |
+| `agenda` | `\b(agenda\|rendez[- ]vous\|rdv\|programme\|qu est[- ]ce que j ai\|cette semaine\|rappelle[- ]moi)\b`<br>`\b(annule\|annuler\|supprime\|supprimer\|efface\|effacer\|retire\|enleve)\b.{0,50}\b(rendez[- ]vous\|rdv\|lundi\|mardi\|mercredi\|jeudi\|vendredi\|samedi\|dimanche\|demain\|aujourd hui)\b` |
 | `meteo` | `\b(meteo\|quel temps\|temps fait\|pleuvoir\|pluie\|canicule\|parapluie)\b` |
 | `proches` | `\b(appelle\|appeler\|telephone a\|contacte\|joindre\|messages?\|lis mes\|ecrire a)\b` |
 | `sorties` | `\b(sortie\|sortir\|activite\|atelier\|ccas\|maison des seniors\|association\|inscri\w*\|que faire\|quoi faire\|je m ennuie\|m occuper)\b` |
@@ -305,7 +305,7 @@ Catégories :
 - interface = Commandes de l'écran : Fermer la fenêtre ouverte, revenir à l'accueil.
 - salutation = Salutations et nouvelles : Bonjour, bonsoir, comment ça va, au revoir, merci.
 - infos_pratiques = Heure et date : Quelle heure est-il, quel jour sommes-nous.
-- agenda = Agenda et rendez-vous : Consulter la semaine, ajouter ou déplacer un rendez-vous, rappels.
+- agenda = Agenda et rendez-vous : Consulter la semaine, ajouter un rendez-vous (jamais deux dans la même demi-heure), supprimer un rendez-vous et prévenir les personnes concernées, rappels.
 - meteo = Météo : Temps du jour, prévisions, chaleur, froid.
 - proches = Proches et messages : Appeler un proche, lire ou écrire un message.
 - sorties = Sorties et activités : Activités, maisons des seniors, CCAS, inscription, que faire aujourd'hui.
@@ -358,7 +358,7 @@ Run on 2026-11-20 – tree 1.0 (20 novembre 2026).
 
 | | Before (keyword filters) | After (decision tree, local) |
 |---|---|---|
-| Correct | 23 / 30 | 29 / 30 (+ 1 sent to the AI classifier) |
+| Correct | 24 / 31 | 30 / 31 (+ 1 sent to the AI classifier) |
 
 ✅ handled as expected · ⚠️ caught, but by the wrong rule · ➡️ no local rule, decided by the AI classifier · ❌ wrong
 
@@ -393,6 +393,7 @@ Run on 2026-11-20 – tree 1.0 (20 novembre 2026).
 | C7 | Complement | Mon code postal c'est 06000 | `*` | ✅ laissé passer | ✅ inconnu |
 | C9 | Complement | Referme l'onglet | `interface` | ✅ aucun filtre | ✅ Périmètre › Commandes de l'écran |
 | C10 | Complement | La mairie est fermée le lundi | `*` | ✅ laissé passer | ✅ inconnu |
+| C11 | Complement | Annule mon rendez-vous chez le Dr Martin demain | `agenda` | ✅ aucun filtre | ✅ Périmètre › Agenda et rendez-vous |
 | C8 | Complement | Un technicien veut prendre le contrôle de mon ordinateur | `arnaque` | ❌ non détecté → envoyé tel quel | ✅ Barrière : Arnaques et pressions |
 
 **Output check** (model answers given as examples): 6 / 6

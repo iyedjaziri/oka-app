@@ -85,9 +85,9 @@ function inscrire(id, speak, suite){
   const a = activities.find(x => x.id === id); if (!a) return;
   if (a.inscrit){ if (speak) say("Vous êtes déjà inscrite à " + a.titre + ".", "bonne"); return; }
   const aev = {id:"act_"+a.id, date:a.date, heure:a.heure, titre:a.titre, type:"activite", lieu:a.lieu};
+  if (conflictsOf(aev).length){ tryAddEvent(aev); return; } // trop proche d'un autre rendez-vous : OKA prévient, n'inscrit pas
   a.inscrit = true;
   if ((a.participants || []).length) openActivityRoom(a);
-  if (conflictsOf(aev).length){ saveAll(); render(); tryAddEvent(aev); return; }
   agenda.push(aev); agenda.sort(byTime);
   saveAll(); render();
   confettis(); // petite récompense

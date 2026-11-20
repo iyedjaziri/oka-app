@@ -32,8 +32,10 @@ function splitSentences(t) {
 }
 const cleClip = s => { let h = 0x811c9dc5; for (const c of s.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ").trim()) { h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, "0"); };
 
+// nombres en lettres, avec le même code que l'application (app/js/05-nombres.js)
+const nombresEnLettres = new Function(fs.readFileSync(new URL("app/js/05-nombres.js", racine), "utf8") + "\nreturn nombresEnLettres;")();
 const table = {};
-for (const p of phrases) for (const s of splitSentences(p)) table[cleClip(s)] = s;
+for (const p of phrases) for (const s of splitSentences(p)) table[cleClip(s)] = nombresEnLettres(s);
 const dossier = new URL("app/audio/voix/", racine);
 fs.mkdirSync(dossier, { recursive: true });
 fs.writeFileSync(new URL("phrases.json", dossier), JSON.stringify(table, null, 1));

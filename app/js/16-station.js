@@ -97,7 +97,7 @@ const cleVoix = s => (settings.voixLocale || "estelle") + "|" + s;
 function audioLocal(s){
   const k = cleVoix(s);
   if (!voixPretes.has(k)){
-    voixPretes.set(k, fetch(stationUrl() + "/voix/tts", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({texte:s, voix:settings.voixLocale || ""})})
+    voixPretes.set(k, fetch(stationUrl() + "/voix/tts", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({texte:nombresEnLettres(s), voix:settings.voixLocale || ""})})
       .then(async r => { if (!r.ok) throw new Error("voix " + r.status); noterConso(JSON.parse(r.headers.get("x-oka-mesure") || "null"), true); return r.blob(); }));
     if (voixPretes.size > 40) voixPretes.delete(voixPretes.keys().next().value);
   }
