@@ -33,7 +33,8 @@
   <button class="qm-item" id="btnHist" data-ic="history">Historique de la conversation</button>
   <button class="qm-item" id="btnSettings" data-ic="settings">Réglages avancés</button>
   <div class="qm-music"><div class="qm-t"><span data-ic="music"></span>Musique calme</div>
-    <div class="qm-mrow"><span id="musicTitre"></span><button class="qm-mbtn" id="musicPlay" type="button"></button><button class="qm-mbtn" id="musicNext" type="button" aria-label="Morceau suivant">Suivante ›</button></div></div>
+    <div class="qm-mrow"><span id="musicTitre"></span><button class="qm-mbtn" id="musicPlay" type="button"></button><button class="qm-mbtn" id="musicNext" type="button" aria-label="Morceau suivant">Suivante ›</button></div>
+    <div class="qm-vol"><span data-ic="speaker"></span><input type="range" id="musicVol" min="0" max="100" step="5" aria-label="Volume de la musique"></div></div>
   <div class="qm-season"><span>Couleurs de saison<br><b id="seasonName"></b></span><button class="qm-sbtn" id="seasonBtn" type="button"></button></div>
 </div>
 
@@ -199,6 +200,11 @@
       <div><label>Couleurs de saison</label><select class="f" id="st_theme"><option value="auto">Selon la saison du jour</option><option value="printemps">Printemps (frais et lumineux)</option><option value="ete">Été (solaire et chaleureux)</option><option value="automne">Automne (rassurant et boisé)</option><option value="hiver">Hiver (apaisant et cocon)</option></select></div>
       <div><label>Mode sombre</label><select class="f" id="st_dark"><option value="0">Non (clair)</option><option value="1">Oui (sombre)</option></select></div>
       <div><label>Taille des caractères</label><select class="f" id="st_fs"><option value="petit">Petits caractères</option><option value="moyen">Caractères moyens</option><option value="grand">Grands caractères</option></select></div>
+    </div>
+    <h3>Musique calme</h3>
+    <div class="grid2">
+      <div><label for="st_volMusique">Volume de la musique</label><input class="f" id="st_volMusique" type="range" min="0" max="100" step="5"></div>
+      <div><label>Morceau en cours</label><div class="row"><span id="st_musicTitre" class="muted"></span><button class="btn ghost sm" id="st_musicNext" type="button">Morceau suivant ›</button></div></div>
     </div>
     <h3>Mon quartier</h3>
     <label for="st_adresse">Adresse (facultatif)</label>

@@ -8,3 +8,6 @@ supabase/.temp/
 supabase/.branches/
 supabase/functions/.env
 /deno.lock
+
+# morceaux sources déposés à la racine (les versions utilisées sont dans app/audio/)
+/*.mp3

@@ -24,8 +24,13 @@ function confettis(){
 /* ---- musique calme : liste de morceaux, lecture / pause, morceau suivant ---- */
 // ajouter un morceau : déposer le fichier dans app/audio/ et l'ajouter à cette liste
 const PISTES = [
-  {titre:"Tout est calme", fichier:"audio/tout-est-calme.mp3"}
+  {titre:"Tout est calme", fichier:"audio/tout-est-calme.mp3"},
+  {titre:"Morning at the Cala", fichier:"audio/morning-at-the-cala.mp3"},
+  {titre:"The Room at Twilight", fichier:"audio/the-room-at-twilight.mp3"},
+  {titre:"Where the Rain Rests", fichier:"audio/where-the-rain-rests.mp3"}
 ];
+// volume réglé par la personne (0 à 1) ; bas par défaut
+const volMusique = () => settings.volMusique ?? .3;
 const musique = {audio:null, ctx:null, gain:null, on:false, i:store.get("pisteI", 0) % PISTES.length, veille:null};
 function musiqueAudio(){
   if (musique.audio) return musique.audio;
@@ -39,7 +44,7 @@ function musiqueAudio(){
 }
 // la musique se tait quand OKA écoute (le micro ne doit pas l'entendre) et baisse quand elle parle
 function musiqueVolume(){
-  const cible = !musique.on || av.listening ? 0 : av.speaking ? .12 : .5;
+  const cible = !musique.on || av.listening ? 0 : volMusique() * (av.speaking ? .25 : 1);
   if (musique.gain) musique.gain.gain.setTargetAtTime(cible, musique.ctx.currentTime, .5);
   else if (musique.audio) musique.audio.volume = cible;
 }
@@ -70,13 +75,19 @@ function majMusique(){
   const b = document.getElementById("musicFloat"), t = document.getElementById("musicTitre"), pl = document.getElementById("musicPlay");
   b.classList.toggle("on", musique.on); b.setAttribute("aria-pressed", musique.on ? "true" : "false");
   b.title = musique.on ? "Couper la musique" : "Mettre une musique calme";
-  t.textContent = PISTES[musique.i].titre;
+  t.textContent = document.getElementById("st_musicTitre").textContent = PISTES[musique.i].titre;
   pl.innerHTML = ic(musique.on ? "pause" : "play") + (musique.on ? "Pause" : "Écouter");
   document.getElementById("musicNext").classList.toggle("hidden", PISTES.length < 2);
 }
 document.getElementById("musicFloat").onclick = e => { e.stopPropagation(); wake(); musique.on ? musiqueArreter() : musiqueJouer(); };
 document.getElementById("musicPlay").onclick = () => musique.on ? musiqueArreter() : musiqueJouer();
 document.getElementById("musicNext").onclick = () => musiqueSuivante(false);
+document.getElementById("st_musicNext").onclick = () => musiqueSuivante(false);
+// barres de volume (menu et réglages avancés), appliquées tout de suite
+const BARRES_VOL = ["musicVol", "st_volMusique"].map(id => document.getElementById(id));
+function majVolume(){ BARRES_VOL.forEach(b => b.value = Math.round(volMusique() * 100)); }
+BARRES_VOL.forEach(b => b.oninput = () => { settings.volMusique = +b.value / 100; store.set("settings", settings); majVolume(); musiqueVolume(); });
+majVolume();
 // le navigateur interdit le son sans geste : si la musique était allumée, elle reprend au premier toucher
 if (settings.musique === "1") document.addEventListener("pointerdown", function reprise(e){
   document.removeEventListener("pointerdown", reprise, true);

@@ -474,7 +474,9 @@ body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--be
 @keyframes musique{50%{box-shadow:0 0 0 7px color-mix(in srgb, var(--c-nav) 18%, transparent)}}
 .qm-music{padding:10px 8px 6px;border-top:1px solid var(--line);margin-top:6px}
 .qm-mrow{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:16px}
-.qm-mrow #musicTitre{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qm-mrow{flex-wrap:wrap}
+.qm-mrow #musicTitre{flex:1 1 100%;min-width:0;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qm-mrow .qm-mbtn{flex:1;justify-content:center}
 .qm-mbtn{display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 12px;border:2px solid var(--line);background:var(--paper);border-radius:var(--r-s);font-weight:700;font-size:15px;color:var(--ink)}
 .qm-mbtn .ic{width:18px;height:18px}
 .qm-mbtn:hover{background:var(--beige-2)}
@@ -483,3 +485,7 @@ body.dark{background:color-mix(in srgb, var(--teinte, var(--beige)) 5%, var(--be
 
 /* ===== confettis à l'inscription ===== */
 .confettis{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:70}
+.qm-vol{display:flex;align-items:center;gap:10px;margin-top:10px;color:var(--c-nav)}
+.qm-vol .ic{width:22px;height:22px;flex:0 0 auto}
+.qm-vol input{flex:1;accent-color:var(--c-nav);height:28px}
+#st_volMusique{accent-color:var(--c-nav);padding:6px 10px}
