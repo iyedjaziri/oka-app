@@ -16,14 +16,24 @@
 
 <header>
   <div class="logo"><img id="logoImg" alt=""><div>OKA</div></div>
-  <span id="modeBadge" class="badge">Mode démo</span>
-  <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
-  <button class="iconbtn fsbtn" id="btnFs" title="Taille des caractères" aria-label="Changer la taille des caractères"><span class="aa">A<b>A</b></span></button>
-  <button class="iconbtn" id="btnDark" title="Mode sombre" aria-pressed="false"><span id="darkIc"></span><span id="darkTxt">Sombre</span></button>
-  <button class="iconbtn" id="btnHist" title="Historique de la conversation" data-ic="history">Historique</button>
-  <button class="iconbtn" id="btnProfile" title="Profil" data-ic="user">Profil</button>
-  <button class="iconbtn" id="btnSettings" title="Réglages" data-ic="settings">Réglages</button>
+  <button class="gearbtn" id="btnMenu" title="Réglages" aria-label="Réglages" aria-haspopup="true" aria-expanded="false" aria-controls="quickMenu" data-ic="settings"></button>
 </header>
+
+<!-- Menu des réglages rapides : flotte au-dessus de la page, ne déplace rien -->
+<div class="quickmenu hidden" id="quickMenu" aria-label="Réglages rapides">
+  <div class="qm-sec">
+    <div class="qm-t"><span data-ic="access"></span>Accessibilité</div>
+    <div class="qm-lbl" id="qmFsLbl">Taille du texte</div>
+    <div class="qm-fs" role="group" aria-labelledby="qmFsLbl">
+      <button data-fs="petit" aria-label="Petits caractères" style="font-size:16px">A</button><button data-fs="moyen" aria-label="Caractères moyens" style="font-size:21px">A</button><button data-fs="grand" aria-label="Grands caractères" style="font-size:27px">A</button>
+    </div>
+  </div>
+  <button class="qm-item" id="btnDark" aria-pressed="false"><span id="darkIc"></span><span id="darkTxt">Mode sombre</span></button>
+  <button class="qm-item" id="btnProfile" data-ic="user">Profil</button>
+  <button class="qm-item" id="btnHist" data-ic="history">Historique de la conversation</button>
+  <button class="qm-item" id="btnSettings" data-ic="settings">Réglages avancés</button>
+  <div class="qm-season"><span>Couleurs de saison<br><b id="seasonName"></b></span><button class="qm-sbtn" id="seasonBtn" type="button"></button></div>
+</div>
 
 <main>
   <nav class="tabs side" id="tabs" aria-label="Fenêtres">
@@ -234,7 +244,6 @@
 </div>
 
 <canvas id="seasonFx" aria-hidden="true"></canvas>
-<button class="seasonbtn" id="seasonBtn" type="button">🍂</button>
 <div class="toast hidden" id="toast"></div>
 
 <script src="config.js"></script>

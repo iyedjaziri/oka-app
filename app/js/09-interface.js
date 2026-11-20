@@ -114,9 +114,10 @@ function applyTheme(){
   fxStart(season, dark);
   const sb = document.getElementById("seasonBtn");
   sb.textContent = SEASON_EMOJI[season]; sb.title = "Couleurs : " + SEASON_NAME[season] + " (toucher pour changer)"; sb.setAttribute("aria-label", sb.title);
+  document.getElementById("seasonName").textContent = SEASON_NAME[season];
   currentSeason = season;
   document.getElementById("darkIc").innerHTML = ic(dark ? "sun" : "moon");
-  document.getElementById("darkTxt").textContent = dark ? "Clair" : "Sombre";
+  document.getElementById("darkTxt").textContent = dark ? "Mode clair" : "Mode sombre";
   document.getElementById("btnDark").setAttribute("aria-pressed", dark ? "true" : "false");
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t.card;
 }
@@ -138,9 +139,33 @@ function layoutSimple(){
   document.documentElement.style.setProperty("--ctrlH", document.querySelector(".controls").offsetHeight + "px");
   document.documentElement.style.setProperty("--hdrH", document.querySelector("header").offsetHeight + "px");
   document.documentElement.style.setProperty("--navH", (getComputedStyle(nav).position === "fixed" ? nav.offsetHeight : 0) + "px");
+  alignSide(true);
 }
+// barre latérale alignée sur la scène de l'avatar : même haut, même hauteur (ordinateur et tablette)
+function alignSide(largeur){
+  const nav = document.getElementById("tabs"), h = document.getElementById("stage").offsetHeight, R = document.documentElement.style;
+  const ok = getComputedStyle(nav).position !== "fixed" && h > 200;
+  nav.classList.toggle("aligned", ok);
+  if (!ok) return;
+  R.setProperty("--sideH", h + "px");
+  // largeur : suit la hauteur, et assez large pour les libellés en grands caractères
+  if (largeur) R.setProperty("--sideW", Math.round(Math.max(118 * (FS[settings.fs] || 1), Math.min(150, (h - 30) / 3.85))) + "px");
+}
+if (window.ResizeObserver) new ResizeObserver(() => alignSide(false)).observe(document.getElementById("stage"));
 window.addEventListener("resize", layoutSimple);
-document.getElementById("btnFs").onclick = () => { const order = ["petit","moyen","grand"]; settings.fs = order[(order.indexOf(settings.fs)+1) % 3]; store.set("settings", settings); applyDisplay(); toast({petit:"Petits caractères", moyen:"Caractères moyens", grand:"Grands caractères"}[settings.fs]); };
+/* ---- menu des réglages rapides (roue en haut à droite) ---- */
+const QM = document.getElementById("quickMenu"), QB = document.getElementById("btnMenu");
+function quickMenu(open){
+  QM.classList.toggle("hidden", !open); QB.classList.toggle("on", open); QB.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) majQuickMenu();
+}
+function majQuickMenu(){ QM.querySelectorAll("[data-fs]").forEach(b => { const on = b.dataset.fs === settings.fs; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }); }
+QB.onclick = e => { e.stopPropagation(); quickMenu(QM.classList.contains("hidden")); };
+document.addEventListener("click", e => { if (!QM.classList.contains("hidden") && !QM.contains(e.target)) quickMenu(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !QM.classList.contains("hidden")){ quickMenu(false); QB.focus(); } });
+// la taille change, le menu et la roue restent en place
+QM.querySelectorAll("[data-fs]").forEach(b => b.onclick = () => { settings.fs = b.dataset.fs; store.set("settings", settings); applyDisplay(); majQuickMenu(); });
+["btnProfile", "btnHist", "btnSettings"].forEach(id => document.getElementById(id).addEventListener("click", () => quickMenu(false)));
 // un clic ouvre la fenêtre ; un second clic sur le même onglet la referme
 document.getElementById("tabs").onclick = e => { const b = e.target.closest("button"); if (!b) return; wake(); if (winOpen && tab === b.dataset.tab) closeWin(); else showTab(b.dataset.tab); };
 const COLORS = ["var(--c-nav)","var(--c-btn)","#8a5a3b","#5b7f6a","#5b7fa3","#a0522d"];
@@ -151,9 +176,6 @@ function render(){
   document.getElementById("btnHist").classList.toggle("on", winOpen && tab === "log");
   const n = Object.values(unread).reduce((a,b) => a+b, 0), dot = document.getElementById("chatDot");
   dot.textContent = n; dot.classList.toggle("hidden", !n);
-  const b = document.getElementById("modeBadge");
-  const claude = modeLibre();
-  b.textContent = claude ? "Conversation libre" : "Mode démo"; b.classList.toggle("claude", !!claude);
   const P = document.getElementById("panel");
   P.innerHTML = `<div id="panelIn" class="${tab === "chat" ? "fill" : ""}">` + ({today:viewToday, agenda:viewAgenda, proches:viewProches, sorties:viewSorties, chat:viewChat, urgence:viewUrgence, log:() => "", jeux:viewJeux}[tab] || viewToday)() + `</div>`;
   bindPanel();

@@ -7,9 +7,6 @@ document.getElementById("stage").onclick = () => { if (av.sleeping){ wake(); say
 let toastT;
 function toast(t, ms){ const el = document.getElementById("toast"); el.textContent = t; el.classList.remove("hidden"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add("hidden"), ms || 4500); }
 function tickClock(){
-  const d = new Date();
-  document.getElementById("clockT").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
-  document.getElementById("clockD").textContent = JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] + " " + d.getFullYear();
   if (!av.sleeping && !av.speaking && !av.listening && Date.now() - av.lastAct > 180000) sleep();
 }
 setInterval(tickClock, 1000); tickClock();
