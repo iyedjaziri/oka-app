@@ -1,0 +1,19 @@
+{
+  "name": "oka-app",
+  "private": true,
+  "description": "OKA – compagne virtuelle Diwaging (application web + serveur Supabase)",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/config.mjs --si-absent && node tools/serveur-local.mjs",
+    "config": "node tools/config.mjs",
+    "config:local": "node tools/config.mjs --local",
+    "build:single": "node tools/build-single.mjs",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "fonctions": "supabase functions serve --env-file supabase/functions/.env"
+  },
+  "devDependencies": {
+    "supabase": "3.0.0"
+  }
+}
